@@ -6,36 +6,59 @@
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1380px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.brand h1{font-size:22px;margin:0}.brand p{margin:5px 0 0;color:#6b7280;font-size:13px}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls select,.controls button{border:1px solid #d1d5db;border-radius:10px;background:white;padding:10px 12px}.controls .primary{background:#111827;color:#fff;border-color:#111827}.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px #0000000a}.k{font-size:12px;color:#6b7280;margin-bottom:8px}.v{font-size:24px;font-weight:750}.s{font-size:11px;color:#9ca3af;margin-top:5px}.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-top:16px;overflow:hidden}.section-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #e5e7eb}.section-head h2{font-size:15px;margin:0}.badge{font-size:11px;padding:5px 8px;border-radius:999px;background:#f3f4f6;color:#4b5563}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:11px 12px;border-bottom:1px solid #f3f4f6;text-align:left;white-space:nowrap}th{color:#6b7280;font-weight:600;background:#fafafa}.good{color:#166534}.warn{color:#92400e}.bad{color:#991b1b}.muted{color:#9ca3af}.entity-main{font-weight:600}.entity-id{font-size:10px;color:#9ca3af;margin-top:3px}.spend-cell{font-weight:700}.btn{border:0;border-radius:8px;padding:7px 9px;font-size:11px;cursor:pointer}.btn-dark{background:#111827;color:white}.btn-light{background:#e5e7eb;color:#111827}.status{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pill{font-size:11px;padding:6px 9px;border-radius:999px;background:#fff;border:1px solid #e5e7eb}.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;background:#9ca3af}.on .dot{background:#16a34a}.error{padding:14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;margin-bottom:14px;display:none}.login{position:fixed;inset:0;background:#111827e8;display:flex;align-items:center;justify-content:center;z-index:10}.login-card{width:min(420px,90vw);background:white;padding:24px;border-radius:16px}.login-card h2{margin:0 0 8px}.login-card p{font-size:13px;color:#6b7280}.login-card input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;margin:8px 0 10px}.login-card button{width:100%;padding:12px;border:0;background:#111827;color:white;border-radius:10px}.hide{display:none!important}.modal{position:fixed;inset:0;background:#111827aa;display:flex;align-items:center;justify-content:center;z-index:20;padding:18px}.modal-card{width:min(900px,96vw);max-height:88vh;background:#fff;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #e5e7eb}.modal-head h3{margin:0;font-size:16px}.modal-close{border:0;background:#f3f4f6;border-radius:8px;padding:7px 10px;cursor:pointer}.modal-body{padding:16px;overflow:auto}.conv{border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;overflow:hidden}.conv-head{padding:10px 12px;background:#f9fafb;border-bottom:1px solid #e5e7eb}.conv-name{font-weight:700}.conv-meta{font-size:11px;color:#6b7280;margin-top:3px}.msg{padding:10px 12px;border-bottom:1px solid #f3f4f6}.msg:last-child{border-bottom:0}.msg-row{display:flex;margin:8px 0}.msg-row.inbound{justify-content:flex-start}.msg-row.outbound{justify-content:flex-end}.bubble{max-width:78%;padding:9px 11px;border-radius:12px;background:#f3f4f6}.msg-row.outbound .bubble{background:#dcfce7}.msg-label{font-size:10px;font-weight:700;color:#6b7280;margin-bottom:3px}.msg-text{white-space:pre-wrap;line-height:1.4}.msg-time{font-size:10px;color:#9ca3af;margin-top:4px}.empty-state{padding:28px;text-align:center;color:#6b7280}@media(max-width:1050px){.cards{grid-template-columns:repeat(3,1fr)}}@media(max-width:680px){.wrap{padding:15px}.top{align-items:flex-start;flex-direction:column}.cards{grid-template-columns:repeat(2,1fr)}.v{font-size:20px}.controls{width:100%}.controls select{max-width:100%}}
 </style>
+
+<style id="ux-enhancements">
+:root{--panel:#ffffff;--ink:#111827;--muted2:#6b7280;--line:#e5e7eb;--soft:#f8fafc;--accent:#111827}
+body{background:linear-gradient(180deg,#f8fafc 0,#f3f4f6 260px,#f3f4f6 100%);min-height:100vh}
+.wrap{max-width:1500px}
+.top{background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:0 8px 30px #1118270a;position:sticky;top:10px;z-index:8}
+.brand h1{letter-spacing:-.02em}.brand-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}.last-update{font-size:11px;color:#9ca3af}
+.controls select,.controls button,.controls input{transition:.18s ease}.controls select:hover,.controls button:hover{border-color:#9ca3af}.controls button{cursor:pointer}
+.auto-on{background:#ecfdf5!important;border-color:#86efac!important;color:#166534!important}
+.cards{margin-top:4px}.card{position:relative;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;overflow:hidden}.card.interactive{cursor:pointer}.card.interactive:hover{transform:translateY(-2px);box-shadow:0 10px 30px #11182712;border-color:#cbd5e1}.card:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:#111827;opacity:.08}
+.section{box-shadow:0 5px 20px #11182708}.section-head{gap:12px;flex-wrap:wrap}.section-title{display:flex;align-items:center;gap:8px}.section-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}.search{border:1px solid #d1d5db;border-radius:9px;padding:8px 10px;font-size:12px;min-width:220px;background:white}.mini-select{border:1px solid #d1d5db;border-radius:9px;padding:8px 10px;font-size:12px;background:white}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{border:1px solid #e5e7eb;background:#fff;color:#4b5563;border-radius:999px;padding:6px 10px;font-size:11px;cursor:pointer;transition:.15s}.chip:hover{background:#f9fafb}.chip.active{background:#111827;color:#fff;border-color:#111827}
+tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
+.btn{transition:transform .12s ease,opacity .12s ease}.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(0)}
+.metric-click{display:flex;align-items:center;justify-content:space-between;gap:8px}.metric-arrow{font-size:14px;color:#cbd5e1}
+.loading-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:5px;box-shadow:0 0 0 0 #16a34a66;animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 7px #16a34a00}100%{box-shadow:0 0 0 0 #16a34a00}}
+.toast{position:fixed;right:20px;bottom:20px;z-index:40;background:#111827;color:white;border-radius:12px;padding:11px 14px;font-size:12px;box-shadow:0 12px 35px #0003;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
+.table-count{font-size:11px;color:#6b7280}
+@media(max-width:850px){.top{position:static}.section-tools{width:100%;margin-left:0}.search{min-width:0;flex:1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
 </head>
 <body>
 <div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña"><button id="loginBtn">Ingresar</button></div></div>
 <div class="wrap">
 <div id="error" class="error"></div>
 <div class="top">
-  <div class="brand"><h1>Meta Ads Sales Tracker</h1><p>Agencia → Cliente → WhatsApp → Venta real</p><div id="status" class="status"></div></div>
+  <div class="brand"><h1>Meta Ads Sales Tracker</h1><p>Agencia → Cliente → WhatsApp → Venta real</p><div class="brand-meta"><div id="status" class="status"></div><span id="lastUpdate" class="last-update">Sin actualizar</span></div></div>
   <div class="controls">
     <select id="clientFilter"><option value="all">Todos los clientes</option></select>
     <select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="180">180 días</option></select>
-    <button id="refresh">Actualizar</button>
+    <button id="refresh">↻ Actualizar</button>
+    <button id="autoRefresh">Auto OFF</button>
     <button id="addClient" class="primary">+ Agregar cliente</button>
   </div>
 </div>
 
 <div class="cards">
-<div class="card"><div class="k">Gasto</div><div id="spend" class="v">—</div><div class="s">Meta Ads</div></div>
-<div class="card"><div class="k">Conversaciones</div><div id="conversations" class="v">—</div><div id="attributed" class="s">—</div></div>
-<div class="card"><div class="k">Ventas</div><div id="purchases" class="v">—</div><div id="close" class="s">—</div></div>
-<div class="card"><div class="k">Facturación</div><div id="revenue" class="v">—</div><div class="s">ventas registradas</div></div>
-<div class="card"><div class="k">CPA real</div><div id="cpa" class="v">—</div><div class="s">gasto / ventas</div></div>
-<div class="card"><div class="k">ROAS real</div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
+<div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">Gasto</div><span class="metric-arrow">→</span></div><div id="spend" class="v">—</div><div class="s">Meta Ads</div></div>
+<div class="card interactive" onclick="focusSection('leadsSection')"><div class="metric-click"><div class="k">Conversaciones</div><span class="metric-arrow">→</span></div><div id="conversations" class="v">—</div><div id="attributed" class="s">—</div></div>
+<div class="card interactive" onclick="setLeadFilter('won',true)"><div class="metric-click"><div class="k">Ventas</div><span class="metric-arrow">→</span></div><div id="purchases" class="v">—</div><div id="close" class="s">—</div></div>
+<div class="card interactive" onclick="setLeadFilter('won',true)"><div class="metric-click"><div class="k">Facturación</div><span class="metric-arrow">→</span></div><div id="revenue" class="v">—</div><div class="s">ventas registradas</div></div>
+<div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">CPA real</div><span class="metric-arrow">→</span></div><div id="cpa" class="v">—</div><div class="s">gasto / ventas</div></div>
+<div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">ROAS real</div><span class="metric-arrow">→</span></div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
 </div>
 
 <div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
 
-<div class="section"><div class="section-head"><h2>Rendimiento por anuncio</h2><span class="badge">Ordenado por gasto</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Campaña</th><th>Conjunto</th><th>Anuncio</th><th>Gasto exacto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
+<div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Campaña</th><th>Conjunto</th><th>Anuncio</th><th>Gasto exacto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section"><div class="section-head"><h2>Conversaciones recientes</h2><span class="badge">Cerrar venta desde acá</span></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="won">Ventas</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
+<div id="toast" class="toast"></div>
 
 <div id="messagesModal" class="modal hide">
   <div class="modal-card">
@@ -48,6 +71,9 @@
 const $=id=>document.getElementById(id);
 let pwd=sessionStorage.getItem('agency_pwd')||'';
 let data=null;
+let leadFilter='all';
+let autoTimer=null;
+let loading=false;
 const money=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n||0));
 const moneyExact=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const pct=n=>`${(Number(n||0)*100).toFixed(1)}%`;
@@ -81,9 +107,75 @@ function connectionText(c){
   return `<span class="warn">Falta ${missing.join(' / ')}</span>`;
 }
 
+
+function showToast(message){
+  const t=$('toast');t.textContent=message;t.classList.add('show');
+  clearTimeout(showToast._t);showToast._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function focusSection(id){$(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
+
+function renderAds(){
+  if(!data)return;
+  const q=($('adSearch')?.value||'').trim().toLowerCase();
+  const sort=$('adSort')?.value||'spend';
+  let rows=[...(data.by_ad||[])];
+  if(q) rows=rows.filter(x=>[x.client_name,x.campaign,x.adset,x.ad,x.campaign_id,x.adset_id,x.ad_id].some(v=>String(v||'').toLowerCase().includes(q)));
+  rows.sort((a,b)=>{
+    if(sort==='leads') return Number(b.leads||0)-Number(a.leads||0)||Number(b.spend||0)-Number(a.spend||0);
+    if(sort==='purchases') return Number(b.purchases||0)-Number(a.purchases||0)||Number(b.revenue||0)-Number(a.revenue||0);
+    if(sort==='roas') return Number(b.roas||0)-Number(a.roas||0)||Number(b.spend||0)-Number(a.spend||0);
+    return Number(b.spend||0)-Number(a.spend||0);
+  });
+  $('adsCount').textContent=rows.length+' anuncio'+(rows.length===1?'':'s');
+  $('adsBody').innerHTML=rows.map(x=>`<tr>
+    <td>${esc(x.client_name||'—')}</td>
+    <td><div class="entity-main">${esc(x.campaign||'—')}</div><div class="entity-id">${esc(x.campaign_id||'Sin ID')}</div></td>
+    <td><div class="entity-main">${esc(x.adset||'—')}</div><div class="entity-id">${esc(x.adset_id||'Sin ID')}</div></td>
+    <td><div class="entity-main">${esc(x.ad||'—')}</div><div class="entity-id">${esc(x.ad_id||'Sin ID')}</div></td>
+    <td class="spend-cell">${moneyExact(x.spend)}</td>
+    <td>${x.leads}</td>
+    <td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}','${encodeURIComponent(String(x.ad||'Anuncio'))}')">Ver mensajes</button></td>
+    <td>${x.purchases}</td><td>${money(x.revenue)}</td>
+    <td>${x.cpa==null?'—':moneyExact(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td>
+    <td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
+  </tr>`).join('')||'<tr><td colspan="12" class="muted">No hay anuncios que coincidan con el filtro.</td></tr>';
+}
+
+function setLeadFilter(filter,scroll=false){
+  leadFilter=filter||'all';
+  document.querySelectorAll('#leadChips .chip').forEach(b=>b.classList.toggle('active',b.dataset.filter===leadFilter));
+  renderLeads();
+  if(scroll) focusSection('leadsSection');
+}
+
+function renderLeads(){
+  if(!data)return;
+  const q=($('leadSearch')?.value||'').trim().toLowerCase();
+  let rows=[...(data.leads||[])];
+  rows=rows.filter(l=>{
+    if(leadFilter==='ads'&&!l.ctwa_clid)return false;
+    if(leadFilter==='organic'&&l.ctwa_clid)return false;
+    if(leadFilter==='won'&&l.status!=='won')return false;
+    if(leadFilter==='open'&&l.status==='won')return false;
+    if(!q)return true;
+    return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text].some(v=>String(v||'').toLowerCase().includes(q));
+  });
+  $('leadsCount').textContent=rows.length+' conversación'+(rows.length===1?'':'es');
+  $('leadsBody').innerHTML=rows.map(l=>{
+    const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), won=l.status==='won';
+    return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
+    <td>${l.ctwa_clid?'<span class="good">Meta Ads</span>':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
+    <td class="${won?'good':''}">${won?'Venta':'Abierto'}</td><td>${s?money(s):'—'}</td>
+    <td><button class="btn btn-light" onclick="openChat('${l.id}')">Ver chat</button> ${won?'':`<button class="btn btn-dark" onclick="sale('${l.id}')">Marcar venta</button> <button class="btn btn-light" onclick="pay('${l.id}')">Link MP</button>`}</td></tr>`
+  }).join('')||'<tr><td colspan="8" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
+}
+
 async function load(){
+  if(loading)return;
+  loading=true;
   try{
     $('error').style.display='none';
+    $('refresh').textContent='Actualizando…';
     const client=$('clientFilter').value||'all';
     data=await api(`/api/dashboard?days=${$('days').value}&client_id=${encodeURIComponent(client)}`);
     $('login').classList.add('hide');
@@ -109,27 +201,13 @@ async function load(){
       <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button></td>
     </tr>`).join('')||'<tr><td colspan="10" class="muted">No hay clientes activos.</td></tr>';
 
-    $('adsBody').innerHTML=(data.by_ad||[]).map(x=>`<tr>
-      <td>${esc(x.client_name||'—')}</td>
-      <td><div class="entity-main">${esc(x.campaign||'—')}</div><div class="entity-id">${esc(x.campaign_id||'Sin ID')}</div></td>
-      <td><div class="entity-main">${esc(x.adset||'—')}</div><div class="entity-id">${esc(x.adset_id||'Sin ID')}</div></td>
-      <td><div class="entity-main">${esc(x.ad||'—')}</div><div class="entity-id">${esc(x.ad_id||'Sin ID')}</div></td>
-      <td class="spend-cell">${moneyExact(x.spend)}</td>
-      <td>${x.leads}</td>
-      <td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}','${encodeURIComponent(String(x.ad||'Anuncio'))}')">Ver mensajes</button></td>
-      <td>${x.purchases}</td><td>${money(x.revenue)}</td>
-      <td>${x.cpa==null?'—':moneyExact(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td>
-      <td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
-    </tr>`).join('')||'<tr><td colspan="12" class="muted">Todavía no hay datos de anuncios.</td></tr>';
+    renderAds();
 
-    $('leadsBody').innerHTML=(data.leads||[]).map(l=>{
-      const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), won=l.status==='won';
-      return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
-      <td>${l.ctwa_clid?'Meta Ads':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
-      <td class="${won?'good':''}">${won?'Venta':'Abierto'}</td><td>${s?money(s):'—'}</td>
-      <td><button class="btn btn-light" onclick="openChat('${l.id}')">Ver chat</button> ${won?'—':`<button class="btn btn-dark" onclick="sale('${l.id}')">Marcar venta</button> <button class="btn btn-light" onclick="pay('${l.id}')">Link MP</button>`}</td></tr>`
-    }).join('')||'<tr><td colspan="8" class="muted">Todavía no entraron conversaciones.</td></tr>';
-  }catch(e){$('error').textContent=e.message;$('error').style.display='block'}
+    renderLeads();
+    $('lastUpdate').innerHTML='<span class="loading-dot"></span>Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    $('refresh').textContent='↻ Actualizar';
+  }catch(e){$('error').textContent=e.message;$('error').style.display='block';$('refresh').textContent='↻ Actualizar'}
+  finally{loading=false}
 }
 
 window.closeMessages=()=>{$('messagesModal').classList.add('hide')};
@@ -238,7 +316,25 @@ window.pay=async id=>{
 
 $('loginBtn').onclick=()=>{pwd=$('password').value;sessionStorage.setItem('agency_pwd',pwd);load()};
 $('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
-$('refresh').onclick=load;$('days').onchange=load;$('clientFilter').onchange=load;$('addClient').onclick=window.addClient;
+$('refresh').onclick=()=>{load();showToast('Actualizando datos…')};
+$('days').onchange=load;
+$('clientFilter').onchange=load;
+$('addClient').onclick=window.addClient;
+$('adSearch').addEventListener('input',renderAds);
+$('adSort').addEventListener('change',renderAds);
+$('leadSearch').addEventListener('input',renderLeads);
+document.querySelectorAll('#leadChips .chip').forEach(b=>b.onclick=()=>setLeadFilter(b.dataset.filter));
+$('autoRefresh').onclick=()=>{
+  if(autoTimer){
+    clearInterval(autoTimer);autoTimer=null;
+    $('autoRefresh').textContent='Auto OFF';$('autoRefresh').classList.remove('auto-on');
+    showToast('Auto actualización desactivada');
+  }else{
+    autoTimer=setInterval(load,30000);
+    $('autoRefresh').textContent='Auto 30s';$('autoRefresh').classList.add('auto-on');
+    showToast('Auto actualización cada 30 segundos');
+  }
+};
 if(pwd)load();
 </script>
 </body></html>
