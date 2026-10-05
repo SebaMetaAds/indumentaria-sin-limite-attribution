@@ -73,7 +73,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
     <div class="attention-box"><div class="attention-title">Tareas pendientes</div><div id="todayTasks"></div></div>
     <div class="attention-box"><div class="attention-title">Seguimientos pendientes</div><div id="todayFollowups"></div></div>
     <div class="attention-box"><div class="attention-title">Renovaciones</div><div id="todayRenewals"></div></div>
-    <div class="attention-box"><div class="attention-title">Oportunidades IA</div><div id="todayAi"></div></div>
+    <div class="attention-box"><div class="attention-title">Oportunidades detectadas</div><div id="todayAi"></div></div>
     <div class="attention-box"><div class="attention-title">Alertas Meta Ads</div><div id="todayAlerts"></div></div>
   </div>
 </div>
@@ -111,13 +111,13 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
 
 <div class="section" id="pipelineSection">
-  <div class="section-head"><div class="section-title"><h2>Pipeline comercial</h2><span id="pipelineCount" class="table-count"></span></div><span class="badge">WhatsApp CRM</span></div>
+  <div class="section-head"><div class="section-title"><h2>Pipeline comercial</h2><span id="pipelineCount" class="table-count"></span></div><div class="section-tools"><button class="btn btn-light" onclick="analyzePending()">Analizar chats pendientes</button><span class="badge">WhatsApp CRM</span></div></div>
   <div id="pipelineBoard" class="pipeline-board"></div>
 </div>
 
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades IA</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -419,12 +419,14 @@ function aiIntentLabel(v){return ({high:'Alta',medium:'Media',low:'Baja'})[v]||'
 function aiScoreClass(score){score=Number(score||0);return score>=70?'ai-high':score>=40?'ai-medium':'ai-low'}
 function renderAiCard(lead){
   if(!lead?.ai_summary){
-    return '<div class="ai-card"><div class="ai-head"><div><div class="ai-title">Análisis comercial con IA</div><div class="ai-meta">Resumen, intención, objeciones y próxima acción</div></div><button class="btn btn-dark" onclick="analyzeLead(\''+lead.id+'\')">Analizar con IA</button></div></div>';
+    return '<div class="ai-card"><div class="ai-head"><div><div class="ai-title">Análisis comercial inteligente</div><div class="ai-meta">Resumen, intención, objeciones y próxima acción</div></div><button class="btn btn-dark" onclick="analyzeLead(\''+lead.id+'\')">Analizar conversación</button></div></div>';
   }
   const products=Array.isArray(lead.ai_products)?lead.ai_products:[];
   const objections=Array.isArray(lead.ai_objections)?lead.ai_objections:[];
+  const local=String(lead.ai_model||'').startsWith('local-');
+  const engine=local?'Motor automático local':'IA · '+String(lead.ai_model||'modelo');
   return '<div class="ai-card">'+
-    '<div class="ai-head"><div><div class="ai-title">Análisis comercial con IA</div><div class="ai-meta">Intención '+esc(aiIntentLabel(lead.ai_intent))+' · '+(lead.ai_analyzed_at?'Analizado '+new Date(lead.ai_analyzed_at).toLocaleString('es-AR'):'')+'</div></div><div><span class="ai-score '+aiScoreClass(lead.ai_score)+'">'+Number(lead.ai_score||0)+'/100</span> <button class="btn btn-light" onclick="analyzeLead(\''+lead.id+'\')">Actualizar</button></div></div>'+
+    '<div class="ai-head"><div><div class="ai-title">'+(local?'Análisis comercial automático':'Análisis comercial con IA')+'</div><div class="ai-meta">'+esc(engine)+' · Intención '+esc(aiIntentLabel(lead.ai_intent))+' · '+(lead.ai_analyzed_at?'Analizado '+new Date(lead.ai_analyzed_at).toLocaleString('es-AR'):'')+'</div></div><div><span class="ai-score '+aiScoreClass(lead.ai_score)+'">'+Number(lead.ai_score||0)+'/100</span> <button class="btn btn-light" onclick="analyzeLead(\''+lead.id+'\')">Actualizar</button></div></div>'+
     '<div class="ai-summary">'+esc(lead.ai_summary)+'</div>'+
     '<div class="ai-grid">'+
       '<div class="ai-box"><b>Productos / interés</b><div>'+esc(products.length?products.join(' · '):'No identificado')+'</div></div>'+
@@ -438,7 +440,8 @@ window.analyzeLead=async id=>{
   btns.forEach(b=>{b.disabled=true;b.textContent='Analizando…'});
   try{
     const r=await api('/api/messages',{method:'POST',body:JSON.stringify({action:'analyze',lead_id:id})});
-    showToast('Análisis IA listo · oportunidad '+Number(r.analysis?.score||0)+'/100');
+    const source=String(r.analysis?.model||'').startsWith('local-')?'automático':'IA';
+    showToast('Análisis '+source+' listo · oportunidad '+Number(r.analysis?.score||0)+'/100');
     await load();
     if(!$('messagesModal').classList.contains('hide')) await openChat(id);
   }catch(e){
@@ -446,6 +449,25 @@ window.analyzeLead=async id=>{
   }finally{
     btns.forEach(b=>{b.disabled=false});
   }
+};
+window.analyzePending=async()=>{
+  const pending=(data?.leads||[]).filter(l=>{
+    const stage=stageOf(l);
+    if(['won','lost'].includes(stage))return false;
+    if(!l.ai_analyzed_at)return true;
+    return l.last_message_at && new Date(l.last_message_at)>new Date(l.ai_analyzed_at);
+  }).slice(0,5);
+  if(!pending.length)return showToast('No hay chats pendientes de análisis');
+  let done=0;
+  showToast('Analizando '+pending.length+' chat'+(pending.length===1?'':'s')+'…');
+  for(const lead of pending){
+    try{
+      await api('/api/messages',{method:'POST',body:JSON.stringify({action:'analyze',lead_id:lead.id})});
+      done++;
+    }catch(e){}
+  }
+  await load();
+  showToast(done+' chat'+(done===1?'':'s')+' analizado'+(done===1?'':'s'));
 };
 
 function renderToday(){
