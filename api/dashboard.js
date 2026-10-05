@@ -70,12 +70,14 @@ export default async function handler(req, res) {
     const monthStart = today.slice(0, 8) + '01';
     let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
     let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
+    let taskQuery = 'select=*&status=eq.open&order=due_at.asc.nullslast,created_at.desc&limit=1000';
     if (requestedClientId) {
       paymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
       followUpQuery += `&client_id=eq.${enc(requestedClientId)}`;
+      taskQuery += `&client_id=eq.${enc(requestedClientId)}`;
     }
 
-    const [leads, sales, insightGroups, servicePayments, followUpLeads] = await Promise.all([
+    const [leads, sales, insightGroups, servicePayments, followUpLeads, agencyTasks] = await Promise.all([
       select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
       select('sales', rangeQuery('sold_at', since, until, requestedClientId)),
       Promise.all(selectedClients.map(async client => {
@@ -83,7 +85,8 @@ export default async function handler(req, res) {
         return insightRows.map(row => ({ ...row, client_id: client.id, client_name: client.name }));
       })),
       select('client_service_payments', paymentQuery),
-      select('leads', followUpQuery)
+      select('leads', followUpQuery),
+      select('agency_tasks', taskQuery)
     ]);
 
     const insights = insightGroups.flat();
@@ -230,6 +233,47 @@ export default async function handler(req, res) {
       }))
       .sort((a,b) => a.days - b.days);
 
+    const openTasks = (agencyTasks || []).map(t => ({
+      ...t,
+      client_name: t.client_id ? (clientById.get(t.client_id)?.name || 'Cliente') : 'Agencia'
+    }));
+    const dueTasks = openTasks.filter(t => {
+      if (!t.due_at) return t.priority === 'urgent';
+      return arDate(t.due_at) <= today;
+    }).map(t => ({
+      ...t,
+      overdue: Boolean(t.due_at && arDate(t.due_at) < today)
+    }));
+
+    const sellerMap = new Map();
+    for (const l of leads || []) {
+      const owner = String(l.assigned_to || '').trim();
+      if (!owner) continue;
+      if (!sellerMap.has(owner)) sellerMap.set(owner, { name:owner, chats:0, won:0, lost:0, open:0, followups_due:0 });
+      const s = sellerMap.get(owner);
+      s.chats += 1;
+      const stage = l.pipeline_stage || (l.status === 'won' ? 'won' : l.status === 'lost' ? 'lost' : 'new');
+      if (stage === 'won') s.won += 1;
+      else if (stage === 'lost') s.lost += 1;
+      else s.open += 1;
+      if (l.follow_up_at && !['won','lost'].includes(stage) && arDate(l.follow_up_at) <= today) s.followups_due += 1;
+    }
+    const sellerStats = [...sellerMap.values()].map(s => ({
+      ...s,
+      close_rate: s.chats ? s.won / s.chats : 0
+    })).sort((a,b) => b.won - a.won || b.close_rate - a.close_rate || b.chats - a.chats);
+
+    const lossMap = new Map();
+    for (const l of leads || []) {
+      const stage = l.pipeline_stage || (l.status === 'lost' ? 'lost' : null);
+      if (stage !== 'lost') continue;
+      const reason = String(l.loss_reason || '').trim() || 'Sin motivo';
+      lossMap.set(reason, (lossMap.get(reason) || 0) + 1);
+    }
+    const lossReasons = [...lossMap.entries()]
+      .map(([reason,count]) => ({reason,count}))
+      .sort((a,b) => b.count - a.count);
+
     const adAlerts = [];
     for (const row of rows) {
       if (row.spend >= 20000 && row.leads === 0) {
@@ -281,8 +325,12 @@ export default async function handler(req, res) {
         due_next_7_days_amount: dueSoonReceivable
       },
       pipeline,
+      seller_stats: sellerStats,
+      loss_reasons: lossReasons,
+      tasks: openTasks,
       today: {
         followups: dueFollowUps,
+        tasks: dueTasks,
         renewals: renewalAttention,
         ad_alerts: adAlerts.slice(0, 30)
       },
