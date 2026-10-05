@@ -1,25 +1,50 @@
 import { sendJson, requireAdmin, isoRange } from '../lib/http.js';
 import { select } from '../lib/supabase.js';
-import { getAdInsights } from '../lib/meta.js';
+import { listClients } from '../lib/clients.js';
+import { clientMetaConfig, getAdInsights } from '../lib/meta.js';
 
 function enc(v) { return encodeURIComponent(v); }
 function n(v) { return Number(v || 0); }
 
+function rangeQuery(column, since, until, clientId) {
+  let q = `select=*&${column}=gte.${enc(since)}&${column}=lte.${enc(until)}&order=${column}.desc&limit=2000`;
+  if (clientId) q += `&client_id=eq.${enc(clientId)}`;
+  return q;
+}
+
 export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'Método no permitido' });
+
   try {
     const { since, until, days } = isoRange(req.query || {});
-    const [leads, sales, insights] = await Promise.all([
-      select('leads', `select=*&first_message_at=gte.${enc(since)}&first_message_at=lte.${enc(until)}&order=first_message_at.desc&limit=1000`),
-      select('sales', `select=*&sold_at=gte.${enc(since)}&sold_at=lte.${enc(until)}&order=sold_at.desc&limit=1000`),
-      getAdInsights(since, until)
+    const requestedClientId = req.query?.client_id && req.query.client_id !== 'all' ? req.query.client_id : null;
+
+    const clients = await listClients();
+    const selectedClients = requestedClientId
+      ? clients.filter(c => c.id === requestedClientId)
+      : clients.filter(c => c.status === 'active');
+
+    if (requestedClientId && selectedClients.length === 0) {
+      return sendJson(res, 404, { error: 'Cliente no encontrado' });
+    }
+
+    const [leads, sales, insightGroups] = await Promise.all([
+      select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
+      select('sales', rangeQuery('sold_at', since, until, requestedClientId)),
+      Promise.all(selectedClients.map(async client => {
+        const rows = await getAdInsights(since, until, client);
+        return rows.map(row => ({ ...row, client_id: client.id, client_name: client.name }));
+      }))
     ]);
 
+    const insights = insightGroups.flat();
+    const clientById = new Map(clients.map(c => [c.id, c]));
     const salesByLead = new Map();
     for (const s of sales || []) {
       const arr = salesByLead.get(s.lead_id) || [];
-      arr.push(s); salesByLead.set(s.lead_id, arr);
+      arr.push(s);
+      salesByLead.set(s.lead_id, arr);
     }
 
     const spend = insights.reduce((acc, x) => acc + n(x.spend), 0);
@@ -29,20 +54,44 @@ export default async function handler(req, res) {
 
     const byAd = new Map();
     for (const insight of insights) {
-      byAd.set(insight.ad_id, {
+      const key = `${insight.client_id}:${insight.ad_id}`;
+      byAd.set(key, {
+        client_id: insight.client_id,
+        client_name: insight.client_name,
         ad_id: insight.ad_id,
         campaign: insight.campaign_name || '',
         adset: insight.adset_name || '',
         ad: insight.ad_name || '',
         spend: n(insight.spend),
-        leads: 0, purchases: 0, revenue: 0
+        leads: 0,
+        purchases: 0,
+        revenue: 0
       });
     }
+
     for (const l of leads || []) {
-      const id = l.meta_ad_id || 'sin_ad';
-      if (!byAd.has(id)) byAd.set(id, { ad_id:id, campaign:l.meta_campaign_name || '', adset:l.meta_adset_name || '', ad:l.meta_ad_name || l.referral_headline || 'Sin nombre', spend:0, leads:0, purchases:0, revenue:0 });
-      const row = byAd.get(id); row.leads += 1;
-      for (const s of salesByLead.get(l.id) || []) { row.purchases += 1; row.revenue += n(s.amount); }
+      const key = `${l.client_id}:${l.meta_ad_id || 'sin_ad'}`;
+      const client = clientById.get(l.client_id);
+      if (!byAd.has(key)) {
+        byAd.set(key, {
+          client_id: l.client_id,
+          client_name: client?.name || 'Cliente',
+          ad_id: l.meta_ad_id || 'sin_ad',
+          campaign: l.meta_campaign_name || '',
+          adset: l.meta_adset_name || '',
+          ad: l.meta_ad_name || l.referral_headline || 'Sin nombre',
+          spend: 0,
+          leads: 0,
+          purchases: 0,
+          revenue: 0
+        });
+      }
+      const row = byAd.get(key);
+      row.leads += 1;
+      for (const s of salesByLead.get(l.id) || []) {
+        row.purchases += 1;
+        row.revenue += n(s.amount);
+      }
     }
 
     const rows = [...byAd.values()].map(x => ({
@@ -53,13 +102,49 @@ export default async function handler(req, res) {
       close_rate: x.leads ? x.purchases / x.leads : null
     })).sort((a,b) => b.revenue - a.revenue || b.spend - a.spend);
 
-    const enrichedLeads = (leads || []).map(l => ({ ...l, sales: salesByLead.get(l.id) || [] }));
+    const byClient = selectedClients.map(client => {
+      const cLeads = (leads || []).filter(l => l.client_id === client.id);
+      const cSales = (sales || []).filter(s => s.client_id === client.id);
+      const cSpend = insights.filter(i => i.client_id === client.id).reduce((a,x) => a + n(x.spend), 0);
+      const cRevenue = cSales.reduce((a,x) => a + n(x.amount), 0);
+      const cBuyers = new Set(cSales.map(s => s.lead_id));
+      const config = clientMetaConfig(client);
+      return {
+        id: client.id,
+        name: client.name,
+        slug: client.slug,
+        status: client.status,
+        whatsapp_number: client.whatsapp_number,
+        waba_id: client.waba_id,
+        phone_number_id: client.phone_number_id,
+        ad_account_id: client.ad_account_id,
+        dataset_id: client.dataset_id,
+        conversations: cLeads.length,
+        purchases: cSales.length,
+        unique_buyers: cBuyers.size,
+        spend: cSpend,
+        revenue: cRevenue,
+        cpa: cSales.length ? cSpend / cSales.length : null,
+        roas: cSpend ? cRevenue / cSpend : null,
+        close_rate: cLeads.length ? cBuyers.size / cLeads.length : null,
+        whatsapp_ready: Boolean(client.waba_id && client.phone_number_id),
+        meta_spend_ready: Boolean(config.adAccountId && process.env.META_ACCESS_TOKEN),
+        meta_purchase_ready: Boolean(config.datasetId && config.wabaId && process.env.META_ACCESS_TOKEN)
+      };
+    });
+
+    const enrichedLeads = (leads || []).map(l => ({
+      ...l,
+      client_name: clientById.get(l.client_id)?.name || 'Cliente',
+      sales: salesByLead.get(l.id) || []
+    }));
 
     return sendJson(res, 200, {
       range: { since, until, days },
+      selected_client_id: requestedClientId,
       configured: {
-        meta_insights: Boolean(process.env.META_AD_ACCOUNT_ID && process.env.META_ACCESS_TOKEN),
-        meta_capi: Boolean(process.env.META_DATASET_ID && process.env.META_ACCESS_TOKEN && process.env.WABA_ID),
+        meta_insights: selectedClients.some(c => Boolean(clientMetaConfig(c).adAccountId && process.env.META_ACCESS_TOKEN)),
+        meta_capi: selectedClients.some(c => Boolean(clientMetaConfig(c).datasetId && clientMetaConfig(c).wabaId && process.env.META_ACCESS_TOKEN)),
         mercado_pago: Boolean(process.env.MP_ACCESS_TOKEN)
       },
       totals: {
@@ -74,6 +159,8 @@ export default async function handler(req, res) {
         roas: spend ? revenue/spend : 0,
         close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0
       },
+      clients,
+      by_client: byClient,
       by_ad: rows,
       leads: enrichedLeads
     });
