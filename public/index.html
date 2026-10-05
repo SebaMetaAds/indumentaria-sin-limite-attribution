@@ -25,6 +25,13 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 @keyframes pulse{70%{box-shadow:0 0 0 7px #16a34a00}100%{box-shadow:0 0 0 0 #16a34a00}}
 .toast{position:fixed;right:20px;bottom:20px;z-index:40;background:#111827;color:white;border-radius:12px;padding:11px 14px;font-size:12px;box-shadow:0 12px 35px #0003;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translateY(0)}
 .table-count{font-size:11px;color:#6b7280}
+.tree-row{cursor:default}.tree-row.campaign{background:#f8fafc}.tree-row.adset{background:#fcfcfd}.tree-row.ad{background:#fff}
+.tree-cell{display:flex;align-items:center;gap:8px;min-width:330px}.tree-toggle{width:24px;height:24px;border:0;border-radius:7px;background:#e5e7eb;color:#374151;cursor:pointer;font-size:12px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px}
+.tree-toggle:hover{background:#d1d5db}.tree-indent-1{padding-left:28px}.tree-indent-2{padding-left:58px}
+.tree-icon{width:22px;height:22px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:0 0 22px}
+.campaign .tree-icon{background:#111827;color:#fff}.adset .tree-icon{background:#dbeafe;color:#1d4ed8}.ad .tree-icon{background:#ecfdf5;color:#047857}
+.tree-title{font-weight:700}.adset .tree-title{font-weight:650}.ad .tree-title{font-weight:600}.tree-sub{font-size:10px;color:#9ca3af;margin-top:2px}
+.tree-summary{font-size:10px;color:#6b7280;margin-left:4px}.num-strong{font-weight:700}
 @media(max-width:850px){.top{position:static}.section-tools{width:100%;margin-left:0}.search{min-width:0;flex:1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -54,7 +61,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 
 <div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
 
-<div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Campaña</th><th>Conjunto</th><th>Anuncio</th><th>Gasto exacto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
+<div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
 <div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="won">Ventas</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
@@ -74,6 +81,8 @@ let data=null;
 let leadFilter='all';
 let autoTimer=null;
 let loading=false;
+const collapsedCampaigns=new Set();
+const collapsedAdsets=new Set();
 const money=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n||0));
 const moneyExact=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
 const pct=n=>`${(Number(n||0)*100).toFixed(1)}%`;
@@ -114,31 +123,91 @@ function showToast(message){
 }
 function focusSection(id){$(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
 
+function aggregateAdRows(rows){
+  const a={spend:0,leads:0,purchases:0,revenue:0};
+  for(const x of rows){a.spend+=Number(x.spend||0);a.leads+=Number(x.leads||0);a.purchases+=Number(x.purchases||0);a.revenue+=Number(x.revenue||0)}
+  a.cpa=a.purchases?a.spend/a.purchases:null;
+  a.roas=a.spend?a.revenue/a.spend:null;
+  a.close_rate=a.leads?a.purchases/a.leads:null;
+  return a;
+}
+
+function sortMetricValue(x,sort){
+  if(sort==='leads')return Number(x.leads||0);
+  if(sort==='purchases')return Number(x.purchases||0);
+  if(sort==='roas')return Number(x.roas||0);
+  return Number(x.spend||0);
+}
+
+window.toggleCampaign=key=>{
+  collapsedCampaigns.has(key)?collapsedCampaigns.delete(key):collapsedCampaigns.add(key);
+  renderAds();
+};
+window.toggleAdset=key=>{
+  collapsedAdsets.has(key)?collapsedAdsets.delete(key):collapsedAdsets.add(key);
+  renderAds();
+};
+
 function renderAds(){
   if(!data)return;
   const q=($('adSearch')?.value||'').trim().toLowerCase();
   const sort=$('adSort')?.value||'spend';
   let rows=[...(data.by_ad||[])];
   if(q) rows=rows.filter(x=>[x.client_name,x.campaign,x.adset,x.ad,x.campaign_id,x.adset_id,x.ad_id].some(v=>String(v||'').toLowerCase().includes(q)));
-  rows.sort((a,b)=>{
-    if(sort==='leads') return Number(b.leads||0)-Number(a.leads||0)||Number(b.spend||0)-Number(a.spend||0);
-    if(sort==='purchases') return Number(b.purchases||0)-Number(a.purchases||0)||Number(b.revenue||0)-Number(a.revenue||0);
-    if(sort==='roas') return Number(b.roas||0)-Number(a.roas||0)||Number(b.spend||0)-Number(a.spend||0);
-    return Number(b.spend||0)-Number(a.spend||0);
-  });
-  $('adsCount').textContent=rows.length+' anuncio'+(rows.length===1?'':'s');
-  $('adsBody').innerHTML=rows.map(x=>`<tr>
-    <td>${esc(x.client_name||'—')}</td>
-    <td><div class="entity-main">${esc(x.campaign||'—')}</div><div class="entity-id">${esc(x.campaign_id||'Sin ID')}</div></td>
-    <td><div class="entity-main">${esc(x.adset||'—')}</div><div class="entity-id">${esc(x.adset_id||'Sin ID')}</div></td>
-    <td><div class="entity-main">${esc(x.ad||'—')}</div><div class="entity-id">${esc(x.ad_id||'Sin ID')}</div></td>
-    <td class="spend-cell">${moneyExact(x.spend)}</td>
-    <td>${x.leads}</td>
-    <td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}','${encodeURIComponent(String(x.ad||'Anuncio'))}')">Ver mensajes</button></td>
-    <td>${x.purchases}</td><td>${money(x.revenue)}</td>
-    <td>${x.cpa==null?'—':moneyExact(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td>
-    <td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
-  </tr>`).join('')||'<tr><td colspan="12" class="muted">No hay anuncios que coincidan con el filtro.</td></tr>';
+
+  const campaignMap=new Map();
+  for(const row of rows){
+    const campaignKey=encodeURIComponent(String(row.client_id||'')+'|'+String(row.campaign_id||row.campaign||'sin-campana'));
+    if(!campaignMap.has(campaignKey)){
+      campaignMap.set(campaignKey,{key:campaignKey,client_id:row.client_id,client_name:row.client_name,campaign_id:row.campaign_id,campaign:row.campaign||'Sin campaña',rows:[],adsets:new Map()});
+    }
+    const campaign=campaignMap.get(campaignKey);
+    campaign.rows.push(row);
+    const adsetKey=encodeURIComponent(String(row.client_id||'')+'|'+String(row.campaign_id||row.campaign||'sin-campana')+'|'+String(row.adset_id||row.adset||'sin-conjunto'));
+    if(!campaign.adsets.has(adsetKey))campaign.adsets.set(adsetKey,{key:adsetKey,adset_id:row.adset_id,adset:row.adset||'Sin conjunto',rows:[]});
+    campaign.adsets.get(adsetKey).rows.push(row);
+  }
+
+  let campaigns=[...campaignMap.values()].map(c=>({...c,...aggregateAdRows(c.rows)}));
+  campaigns.sort((a,b)=>sortMetricValue(b,sort)-sortMetricValue(a,sort));
+  const out=[];
+
+  for(const c of campaigns){
+    const cOpen=!collapsedCampaigns.has(c.key);
+    out.push(`<tr class="tree-row campaign">
+      <td><b>${esc(c.client_name||'—')}</b></td>
+      <td><div class="tree-cell"><button class="tree-toggle" onclick="toggleCampaign('${c.key}')">${cOpen?'▼':'▶'}</button><span class="tree-icon">C</span><div><div class="tree-title">${esc(c.campaign)}</div><div class="tree-sub">Campaña · ${esc(c.campaign_id||'Sin ID')} · ${c.rows.length} anuncio${c.rows.length===1?'':'s'}</div></div></div></td>
+      <td class="num-strong">${moneyExact(c.spend)}</td><td class="num-strong">${c.leads}</td><td>—</td><td class="num-strong">${c.purchases}</td><td class="num-strong">${money(c.revenue)}</td>
+      <td>${c.cpa==null?'—':moneyExact(c.cpa)}</td><td class="${c.roas>=1?'good':'bad'}">${c.roas==null?'—':c.roas.toFixed(2)+'x'}</td><td>${c.close_rate==null?'—':pct(c.close_rate)}</td>
+    </tr>`);
+    if(!cOpen)continue;
+
+    let adsets=[...c.adsets.values()].map(s=>({...s,...aggregateAdRows(s.rows)}));
+    adsets.sort((a,b)=>sortMetricValue(b,sort)-sortMetricValue(a,sort));
+    for(const s of adsets){
+      const sOpen=!collapsedAdsets.has(s.key);
+      out.push(`<tr class="tree-row adset">
+        <td></td>
+        <td><div class="tree-cell tree-indent-1"><button class="tree-toggle" onclick="toggleAdset('${s.key}')">${sOpen?'▼':'▶'}</button><span class="tree-icon">CJ</span><div><div class="tree-title">${esc(s.adset)}</div><div class="tree-sub">Conjunto · ${esc(s.adset_id||'Sin ID')} · ${s.rows.length} anuncio${s.rows.length===1?'':'s'}</div></div></div></td>
+        <td>${moneyExact(s.spend)}</td><td>${s.leads}</td><td>—</td><td>${s.purchases}</td><td>${money(s.revenue)}</td>
+        <td>${s.cpa==null?'—':moneyExact(s.cpa)}</td><td class="${s.roas>=1?'good':'bad'}">${s.roas==null?'—':s.roas.toFixed(2)+'x'}</td><td>${s.close_rate==null?'—':pct(s.close_rate)}</td>
+      </tr>`);
+      if(!sOpen)continue;
+
+      const ads=[...s.rows].sort((a,b)=>sortMetricValue(b,sort)-sortMetricValue(a,sort));
+      for(const x of ads){
+        out.push(`<tr class="tree-row ad">
+          <td></td>
+          <td><div class="tree-cell tree-indent-2"><span style="width:24px;flex:0 0 24px"></span><span class="tree-icon">AD</span><div><div class="tree-title">${esc(x.ad||'Sin anuncio')}</div><div class="tree-sub">Anuncio · ${esc(x.ad_id||'Sin ID')}</div></div></div></td>
+          <td>${moneyExact(x.spend)}</td><td>${x.leads}</td><td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}','${encodeURIComponent(String(x.ad||'Anuncio'))}')">Ver mensajes</button></td>
+          <td>${x.purchases}</td><td>${money(x.revenue)}</td><td>${x.cpa==null?'—':moneyExact(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td><td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
+        </tr>`);
+      }
+    }
+  }
+
+  $('adsCount').textContent=campaigns.length+' campaña'+(campaigns.length===1?'':'s')+' · '+rows.length+' anuncio'+(rows.length===1?'':'s');
+  $('adsBody').innerHTML=out.join('')||'<tr><td colspan="10" class="muted">No hay anuncios que coincidan con el filtro.</td></tr>';
 }
 
 function setLeadFilter(filter,scroll=false){
