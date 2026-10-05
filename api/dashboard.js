@@ -5,6 +5,17 @@ import { clientMetaConfig, ensureWabaWebhookSubscription, getAdInsights, hasMeta
 
 function enc(v) { return encodeURIComponent(v); }
 function n(v) { return Number(v || 0); }
+function arDate(value = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date(value));
+}
+function daysBetween(a, b) {
+  const x = new Date(a + 'T12:00:00Z');
+  const y = new Date(b + 'T12:00:00Z');
+  return Math.round((y - x) / 86400000);
+}
 
 function rangeQuery(column, since, until, clientId) {
   let q = `select=*&${column}=gte.${enc(since)}&${column}=lte.${enc(until)}&order=${column}.desc&limit=2000`;
@@ -55,13 +66,24 @@ export default async function handler(req, res) {
 
     const publicClients = clients.map(c => ({ ...c, meta_token_configured: Boolean(tokenStatuses.get(c.id)) }));
 
-    const [leads, sales, insightGroups] = await Promise.all([
+    const today = arDate();
+    const monthStart = today.slice(0, 8) + '01';
+    let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
+    let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
+    if (requestedClientId) {
+      paymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
+      followUpQuery += `&client_id=eq.${enc(requestedClientId)}`;
+    }
+
+    const [leads, sales, insightGroups, servicePayments, followUpLeads] = await Promise.all([
       select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
       select('sales', rangeQuery('sold_at', since, until, requestedClientId)),
       Promise.all(selectedClients.map(async client => {
-        const rows = await getAdInsights(since, until, client);
-        return rows.map(row => ({ ...row, client_id: client.id, client_name: client.name }));
-      }))
+        const insightRows = await getAdInsights(since, until, client);
+        return insightRows.map(row => ({ ...row, client_id: client.id, client_name: client.name }));
+      })),
+      select('client_service_payments', paymentQuery),
+      select('leads', followUpQuery)
     ]);
 
     const insights = insightGroups.flat();
@@ -145,6 +167,12 @@ export default async function handler(req, res) {
         reminder_enabled: client.reminder_enabled !== false,
         reminder_days_before: client.reminder_days_before ?? 1,
         reminder_last_sent_for: client.reminder_last_sent_for || null,
+        website_url: client.website_url || null,
+        instagram_handle: client.instagram_handle || null,
+        monthly_ad_budget: client.monthly_ad_budget == null ? null : Number(client.monthly_ad_budget),
+        business_goal: client.business_goal || null,
+        internal_notes: client.internal_notes || null,
+        primary_contact_name: client.primary_contact_name || null,
         conversations: cLeads.length, purchases: cWon.length, unique_buyers: cBuyers.size,
         spend: cSpend, revenue: cRevenue,
         cpa: cWon.length ? cSpend / cWon.length : null,
@@ -163,6 +191,68 @@ export default async function handler(req, res) {
       sales: salesByLead.get(l.id) || []
     }));
 
+    const pipeline = { new:0, contacted:0, quoted:0, follow_up:0, won:0, lost:0 };
+    for (const lead of leads || []) {
+      const stage = lead.pipeline_stage || (lead.status === 'won' ? 'won' : lead.status === 'lost' ? 'lost' : 'new');
+      if (Object.prototype.hasOwnProperty.call(pipeline, stage)) pipeline[stage] += 1;
+    }
+
+    const activeServiceClients = selectedClients.filter(c => c.status === 'active' && (c.service_status || 'active') === 'active');
+    const mrr = activeServiceClients.reduce((acc, c) => {
+      const fee = n(c.service_fee);
+      const months = Math.max(1, n(c.renewal_period_months) || 1);
+      return acc + fee / months;
+    }, 0);
+    const collectedThisMonth = (servicePayments || []).reduce((acc, p) => acc + n(p.amount), 0);
+    const overdueClients = activeServiceClients.filter(c => c.renewal_date && daysBetween(today, c.renewal_date) < 0);
+    const dueSoonClients = activeServiceClients.filter(c => {
+      if (!c.renewal_date) return false;
+      const d = daysBetween(today, c.renewal_date);
+      return d >= 0 && d <= 7;
+    });
+    const overdueReceivable = overdueClients.reduce((acc, c) => acc + n(c.service_fee), 0);
+    const dueSoonReceivable = dueSoonClients.reduce((acc, c) => acc + n(c.service_fee), 0);
+
+    const dueFollowUps = (followUpLeads || [])
+      .filter(l => !['won','lost'].includes(l.pipeline_stage) && arDate(l.follow_up_at) <= today)
+      .map(l => ({
+        ...l,
+        client_name: clientById.get(l.client_id)?.name || 'Cliente',
+        overdue: arDate(l.follow_up_at) < today
+      }));
+
+    const renewalAttention = activeServiceClients
+      .filter(c => c.renewal_date && daysBetween(today, c.renewal_date) <= 3)
+      .map(c => ({
+        id:c.id, name:c.name, renewal_date:c.renewal_date,
+        days:daysBetween(today, c.renewal_date),
+        service_fee:c.service_fee == null ? null : Number(c.service_fee)
+      }))
+      .sort((a,b) => a.days - b.days);
+
+    const adAlerts = [];
+    for (const row of rows) {
+      if (row.spend >= 20000 && row.leads === 0) {
+        adAlerts.push({
+          severity:'critical', type:'spend_no_chats', client_id:row.client_id,
+          client_name:row.client_name, ad_id:row.ad_id, ad:row.ad,
+          message:`Gastó ${Math.round(row.spend).toLocaleString('es-AR')} sin generar chats`
+        });
+      } else if (row.spend >= 30000 && row.leads >= 3 && row.purchases === 0) {
+        adAlerts.push({
+          severity:'warning', type:'chats_no_sales', client_id:row.client_id,
+          client_name:row.client_name, ad_id:row.ad_id, ad:row.ad,
+          message:`${row.leads} chats y todavía ninguna venta`
+        });
+      } else if (row.leads >= 5 && row.close_rate != null && row.close_rate < 0.05) {
+        adAlerts.push({
+          severity:'warning', type:'low_close_rate', client_id:row.client_id,
+          client_name:row.client_name, ad_id:row.ad_id, ad:row.ad,
+          message:`Cierre bajo: ${(row.close_rate*100).toFixed(1)}%`
+        });
+      }
+    }
+
     return sendJson(res, 200, {
       range: { since, until, days },
       selected_client_id: requestedClientId,
@@ -179,6 +269,22 @@ export default async function handler(req, res) {
         cpa: wonLeads.size ? spend/wonLeads.size : 0,
         roas: spend ? revenue/spend : 0,
         close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0
+      },
+      agency_finance: {
+        active_clients: activeServiceClients.length,
+        mrr,
+        collected_this_month: collectedThisMonth,
+        payments_this_month: (servicePayments || []).length,
+        overdue_clients: overdueClients.length,
+        overdue_receivable: overdueReceivable,
+        due_next_7_days: dueSoonClients.length,
+        due_next_7_days_amount: dueSoonReceivable
+      },
+      pipeline,
+      today: {
+        followups: dueFollowUps,
+        renewals: renewalAttention,
+        ad_alerts: adAlerts.slice(0, 30)
       },
       clients: publicClients, by_client: byClient, by_ad: rows, leads: enrichedLeads
     });
