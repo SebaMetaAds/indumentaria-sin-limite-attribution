@@ -291,7 +291,8 @@ function renderMessageBubble(m){
   }else if(m.message_type==='image'){
     media='<div class="media-fallback">[imagen]</div>';
   }
-  const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">['+esc(m.message_type||'mensaje')+']</div>':'');
+  const fallback=m.message_type==='interactive'?'Contenido interactivo de WhatsApp':m.message_type==='reaction'?'Reacción de WhatsApp':'['+esc(m.message_type||'mensaje')+']';
+  const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">'+fallback+'</div>':'');
   return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+new Date(m.received_at).toLocaleString('es-AR')+'</div></div></div>';
 }
 
