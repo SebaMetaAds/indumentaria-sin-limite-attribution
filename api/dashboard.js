@@ -71,13 +71,15 @@ export default async function handler(req, res) {
     let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
     let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
     let taskQuery = 'select=*&status=eq.open&order=due_at.asc.nullslast,created_at.desc&limit=1000';
+    let aliasPaymentQuery = 'select=*&alias_detected_at=not.is.null&order=alias_detected_at.desc&limit=2000';
     if (requestedClientId) {
       paymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
       followUpQuery += `&client_id=eq.${enc(requestedClientId)}`;
       taskQuery += `&client_id=eq.${enc(requestedClientId)}`;
+      aliasPaymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
     }
 
-    const [leads, sales, insightGroups, servicePayments, followUpLeads, agencyTasks] = await Promise.all([
+    const [leads, sales, insightGroups, servicePayments, followUpLeads, agencyTasks, aliasPaymentLeads] = await Promise.all([
       select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
       select('sales', rangeQuery('sold_at', since, until, requestedClientId)),
       Promise.all(selectedClients.map(async client => {
@@ -86,7 +88,8 @@ export default async function handler(req, res) {
       })),
       select('client_service_payments', paymentQuery),
       select('leads', followUpQuery),
-      select('agency_tasks', taskQuery)
+      select('agency_tasks', taskQuery),
+      select('leads', aliasPaymentQuery)
     ]);
 
     const insights = insightGroups.flat();
@@ -274,6 +277,12 @@ export default async function handler(req, res) {
       .map(([reason,count]) => ({reason,count}))
       .sort((a,b) => b.count - a.count);
 
+    const paymentQueue = (aliasPaymentLeads || []).map(l => ({
+      ...l,
+      client_name: clientById.get(l.client_id)?.name || 'Cliente'
+    }));
+    const pendingPayments = paymentQueue.filter(l => l.payment_check_status === 'pending');
+
     const aiOpportunities = enrichedLeads
       .filter(l => {
         const stage = l.pipeline_stage || (l.status === 'won' ? 'won' : l.status === 'lost' ? 'lost' : 'new');
@@ -350,11 +359,13 @@ export default async function handler(req, res) {
       seller_stats: sellerStats,
       loss_reasons: lossReasons,
       tasks: openTasks,
+      payment_queue: paymentQueue,
       today: {
         followups: dueFollowUps,
         tasks: dueTasks,
         renewals: renewalAttention,
         ai_opportunities: aiOpportunities.slice(0, 30),
+        payments_pending: pendingPayments.slice(0, 30),
         ad_alerts: adAlerts.slice(0, 30)
       },
       clients: publicClients, by_client: byClient, by_ad: rows, leads: enrichedLeads
