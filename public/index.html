@@ -671,7 +671,19 @@ window.manageLead=id=>{
 window.saveLeadManagement=async()=>{
   const id=$('manageLeadId').value, stage=$('manageStage').value;
   const local=$('manageFollowUp').value;
+  const current=(data?.leads||[]).find(x=>x.id===id);
   try{
+    if(stage==='won'&&!(current?.sales||[]).length){
+      await api('/api/lead',{method:'PATCH',body:JSON.stringify({
+        id,
+        assigned_to:$('manageAssigned').value.trim()||null,
+        follow_up_note:$('manageFollowNote').value.trim()||null,
+        loss_reason:null
+      })});
+      closeLeadModal();
+      openSaleModal(id,'sale');
+      return;
+    }
     await api('/api/lead',{method:'PATCH',body:JSON.stringify({
       id,pipeline_stage:stage,
       assigned_to:$('manageAssigned').value.trim()||null,
