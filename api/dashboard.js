@@ -103,6 +103,7 @@ export default async function handler(req, res) {
     const spend = insights.reduce((acc, x) => acc + n(x.spend), 0);
     const revenue = (sales || []).reduce((acc, s) => acc + n(s.amount), 0);
     const wonLeads = new Set((leads || []).filter(l => l.status === 'won').map(l => l.id));
+    const unpricedSales = (leads || []).filter(l => l.status === 'won' && !(salesByLead.get(l.id) || []).length).length;
     const attributedLeads = (leads || []).filter(l => l.ctwa_clid);
 
     const byAd = new Map();
@@ -346,7 +347,8 @@ export default async function handler(req, res) {
         cost_per_conversation: (leads || []).length ? spend/(leads || []).length : 0,
         cpa: wonLeads.size ? spend/wonLeads.size : 0,
         roas: spend ? revenue/spend : 0,
-        close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0
+        close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0,
+        unpriced_sales: unpricedSales
       },
       agency_finance: {
         active_clients: activeServiceClients.length,
