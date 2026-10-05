@@ -74,7 +74,7 @@ export default async function handler(req, res) {
 
     const spend = insights.reduce((acc, x) => acc + n(x.spend), 0);
     const revenue = (sales || []).reduce((acc, s) => acc + n(s.amount), 0);
-    const wonLeads = new Set((sales || []).map(s => s.lead_id));
+    const wonLeads = new Set((leads || []).filter(l => l.status === 'won').map(l => l.id));
     const attributedLeads = (leads || []).filter(l => l.ctwa_clid);
 
     const byAd = new Map();
@@ -108,7 +108,8 @@ export default async function handler(req, res) {
         });
       }
       const row = byAd.get(key); row.leads += 1;
-      for (const s of salesByLead.get(l.id) || []) { row.purchases += 1; row.revenue += n(s.amount); }
+      if (l.status === 'won') row.purchases += 1;
+      for (const s of salesByLead.get(l.id) || []) { row.revenue += n(s.amount); }
     }
 
     const rows = [...byAd.values()].map(x => ({
@@ -124,7 +125,8 @@ export default async function handler(req, res) {
       const cSales = (sales || []).filter(s => s.client_id === client.id);
       const cSpend = insights.filter(i => i.client_id === client.id).reduce((a,x) => a + n(x.spend), 0);
       const cRevenue = cSales.reduce((a,x) => a + n(x.amount), 0);
-      const cBuyers = new Set(cSales.map(s => s.lead_id));
+      const cWon = cLeads.filter(l => l.status === 'won');
+      const cBuyers = new Set(cWon.map(l => l.id));
       const config = clientMetaConfig(client);
       const tokenReady = Boolean(tokenStatuses.get(client.id));
       return {
@@ -132,9 +134,9 @@ export default async function handler(req, res) {
         whatsapp_number: client.whatsapp_number, waba_id: client.waba_id,
         phone_number_id: client.phone_number_id, ad_account_id: client.ad_account_id,
         dataset_id: client.dataset_id, meta_token_configured: tokenReady,
-        conversations: cLeads.length, purchases: cSales.length, unique_buyers: cBuyers.size,
+        conversations: cLeads.length, purchases: cWon.length, unique_buyers: cBuyers.size,
         spend: cSpend, revenue: cRevenue,
-        cpa: cSales.length ? cSpend / cSales.length : null,
+        cpa: cWon.length ? cSpend / cWon.length : null,
         roas: cSpend ? cRevenue / cSpend : null,
         close_rate: cLeads.length ? cBuyers.size / cLeads.length : null,
         whatsapp_ready: Boolean(client.waba_id && client.phone_number_id),
@@ -161,9 +163,9 @@ export default async function handler(req, res) {
       totals: {
         spend, conversations: (leads || []).length,
         attributed_conversations: attributedLeads.length,
-        purchases: (sales || []).length, unique_buyers: wonLeads.size, revenue,
+        purchases: wonLeads.size, unique_buyers: wonLeads.size, revenue,
         cost_per_conversation: (leads || []).length ? spend/(leads || []).length : 0,
-        cpa: (sales || []).length ? spend/(sales || []).length : 0,
+        cpa: wonLeads.size ? spend/wonLeads.size : 0,
         roas: spend ? revenue/spend : 0,
         close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0
       },
