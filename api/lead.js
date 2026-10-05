@@ -36,6 +36,7 @@ export default async function handler(req,res){
     }
     if(Object.prototype.hasOwnProperty.call(body,'follow_up_note')) payload.follow_up_note=body.follow_up_note||null;
     if(Object.prototype.hasOwnProperty.call(body,'loss_reason')) payload.loss_reason=body.loss_reason||null;
+    if(Object.prototype.hasOwnProperty.call(body,'assigned_to')) payload.assigned_to=body.assigned_to||null;
 
     const updated=await patch('leads',{id:`eq.${id}`},payload);
     return sendJson(res,200,{lead:updated?.[0]||lead});
