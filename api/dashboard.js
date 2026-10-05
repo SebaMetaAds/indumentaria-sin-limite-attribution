@@ -274,6 +274,28 @@ export default async function handler(req, res) {
       .map(([reason,count]) => ({reason,count}))
       .sort((a,b) => b.count - a.count);
 
+    const aiOpportunities = enrichedLeads
+      .filter(l => {
+        const stage = l.pipeline_stage || (l.status === 'won' ? 'won' : l.status === 'lost' ? 'lost' : 'new');
+        if (['won','lost'].includes(stage)) return false;
+        return n(l.ai_score) >= 70 || l.ai_requires_attention === true;
+      })
+      .map(l => ({
+        id:l.id,
+        client_id:l.client_id,
+        client_name:l.client_name,
+        contact_name:l.contact_name,
+        phone:l.phone,
+        score:n(l.ai_score),
+        intent:l.ai_intent,
+        summary:l.ai_summary,
+        next_action:l.ai_next_action,
+        objections:Array.isArray(l.ai_objections) ? l.ai_objections : [],
+        assigned_to:l.assigned_to || null,
+        ai_analyzed_at:l.ai_analyzed_at || null
+      }))
+      .sort((a,b) => b.score - a.score);
+
     const adAlerts = [];
     for (const row of rows) {
       if (row.spend >= 20000 && row.leads === 0) {
@@ -332,6 +354,7 @@ export default async function handler(req, res) {
         followups: dueFollowUps,
         tasks: dueTasks,
         renewals: renewalAttention,
+        ai_opportunities: aiOpportunities.slice(0, 30),
         ad_alerts: adAlerts.slice(0, 30)
       },
       clients: publicClients, by_client: byClient, by_ad: rows, leads: enrichedLeads
