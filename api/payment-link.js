@@ -1,5 +1,6 @@
 import { sendJson, readJsonBody, requireAdmin } from '../lib/http.js';
 import { findLeadById } from '../lib/leads.js';
+import { findClientById } from '../lib/clients.js';
 
 export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
@@ -9,6 +10,9 @@ export default async function handler(req, res) {
     const body = readJsonBody(req);
     const lead = await findLeadById(body.leadId);
     if (!lead) throw new Error('Lead no encontrado');
+    const client = await findClientById(lead.client_id);
+    if (!client) throw new Error('Cliente no encontrado');
+
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount <= 0) throw new Error('Monto inválido');
     const base = process.env.PUBLIC_BASE_URL;
@@ -16,15 +20,16 @@ export default async function handler(req, res) {
 
     const payload = {
       items: [{
-        title: body.description || 'Compra IndumentariaSinLimite',
+        title: body.description || `Compra ${client.name}`,
         quantity: 1,
-        currency_id: 'ARS',
+        currency_id: client.currency || 'ARS',
         unit_price: amount
       }],
       external_reference: lead.id,
-      metadata: { lead_id: lead.id, phone: lead.phone },
+      metadata: { lead_id: lead.id, client_id: client.id, client_name: client.name, phone: lead.phone },
       notification_url: `${base.replace(/\/$/, '')}/api/mercadopago-webhook`
     };
+
     const mp = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
