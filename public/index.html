@@ -34,6 +34,10 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 .tree-summary{font-size:10px;color:#6b7280;margin-left:4px}.num-strong{font-weight:700}
 .renewal-badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:700}.renewal-ok{background:#ecfdf5;color:#166534}.renewal-soon{background:#fffbeb;color:#92400e}.renewal-due{background:#fff7ed;color:#9a3412}.renewal-overdue{background:#fef2f2;color:#991b1b}.renewal-off{background:#f3f4f6;color:#6b7280}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-field{display:flex;flex-direction:column;gap:5px}.form-field.full{grid-column:1/-1}.form-field label{font-size:11px;font-weight:700;color:#4b5563}.form-field input,.form-field select,.form-field textarea{border:1px solid #d1d5db;border-radius:9px;padding:10px;font:inherit}.form-field textarea{min-height:90px;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.service-kpis{display:flex;gap:8px;flex-wrap:wrap}.service-kpi{font-size:11px;padding:6px 9px;border:1px solid #e5e7eb;border-radius:999px;background:#fff}
+.today-finance{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:14px 16px;border-bottom:1px solid #e5e7eb}.today-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px}.today-stat .n{font-size:19px;font-weight:800}.today-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:14px}.attention-box{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}.attention-title{font-weight:800;font-size:12px;padding:10px 12px;background:#f9fafb;border-bottom:1px solid #e5e7eb}.attention-item{padding:10px 12px;border-bottom:1px solid #f3f4f6;font-size:11px}.attention-item:last-child{border-bottom:0}.attention-main{font-weight:700}.attention-sub{color:#6b7280;margin-top:3px;white-space:normal;line-height:1.35}.attention-actions{margin-top:7px;display:flex;gap:6px}
+.stage-badge{display:inline-flex;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800}.stage-new{background:#f3f4f6;color:#374151}.stage-contacted{background:#eff6ff;color:#1d4ed8}.stage-quoted{background:#faf5ff;color:#7e22ce}.stage-follow_up{background:#fffbeb;color:#92400e}.stage-won{background:#ecfdf5;color:#166534}.stage-lost{background:#fef2f2;color:#991b1b}
+.pipeline-board{display:grid;grid-template-columns:repeat(6,minmax(190px,1fr));gap:10px;padding:14px;overflow:auto}.pipe-col{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;min-height:120px}.pipe-head{padding:10px 11px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:11px;font-weight:800}.pipe-card{background:#fff;border:1px solid #e5e7eb;border-radius:9px;margin:8px;padding:9px;cursor:pointer}.pipe-card:hover{border-color:#9ca3af}.pipe-name{font-size:11px;font-weight:800}.pipe-meta{font-size:10px;color:#6b7280;margin-top:3px;line-height:1.35}.pipe-follow{font-size:10px;color:#92400e;margin-top:5px}.profile-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.profile-kpi{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px}.profile-kpi b{display:block;font-size:16px;margin-top:3px}
+@media(max-width:1000px){.today-grid{grid-template-columns:1fr}.today-finance{grid-template-columns:repeat(2,1fr)}.profile-kpis{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:850px){.top{position:static}.section-tools{width:100%;margin-left:0}.search{min-width:0;flex:1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -42,7 +46,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="wrap">
 <div id="error" class="error"></div>
 <div class="top">
-  <div class="brand"><h1>Meta Ads Sales Tracker</h1><p>Agencia → Cliente → WhatsApp → Venta real</p><div class="brand-meta"><div id="status" class="status"></div><span id="lastUpdate" class="last-update">Sin actualizar</span></div></div>
+  <div class="brand"><h1>Sistema de Agencia</h1><p>Clientes → Meta Ads → WhatsApp → Ventas → Renovaciones</p><div class="brand-meta"><div id="status" class="status"></div><span id="lastUpdate" class="last-update">Sin actualizar</span></div></div>
   <div class="controls">
     <select id="clientFilter"><option value="all">Todos los clientes</option></select>
     <select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="180">180 días</option></select>
@@ -61,6 +65,16 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">ROAS real</div><span class="metric-arrow">→</span></div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
 </div>
 
+<div class="section" id="todaySection">
+  <div class="section-head"><div class="section-title"><h2>HOY</h2><span class="badge">Prioridades de la agencia</span></div><span id="todaySummary" class="table-count"></span></div>
+  <div id="todayFinance" class="today-finance"></div>
+  <div class="today-grid">
+    <div class="attention-box"><div class="attention-title">Seguimientos pendientes</div><div id="todayFollowups"></div></div>
+    <div class="attention-box"><div class="attention-title">Renovaciones</div><div id="todayRenewals"></div></div>
+    <div class="attention-box"><div class="attention-title">Alertas Meta Ads</div><div id="todayAlerts"></div></div>
+  </div>
+</div>
+
 <div class="section" id="servicesSection">
   <div class="section-head">
     <div class="section-title"><h2>Servicios y renovaciones</h2><span id="serviceCount" class="table-count"></span></div>
@@ -74,11 +88,51 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 
 <div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
 
+<div class="section" id="pipelineSection">
+  <div class="section-head"><div class="section-title"><h2>Pipeline comercial</h2><span id="pipelineCount" class="table-count"></span></div><span class="badge">WhatsApp CRM</span></div>
+  <div id="pipelineBoard" class="pipeline-board"></div>
+</div>
+
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="won">Ventas</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
+
+<div id="leadModal" class="modal hide">
+  <div class="modal-card" style="width:min(620px,96vw)">
+    <div class="modal-head"><h3 id="leadModalTitle">Gestionar conversación</h3><button class="modal-close" onclick="closeLeadModal()">Cerrar</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="manageLeadId">
+      <div class="form-grid">
+        <div class="form-field"><label>Etapa comercial</label><select id="manageStage"><option value="new">Nuevo lead</option><option value="contacted">Contactado</option><option value="quoted">Presupuesto enviado</option><option value="follow_up">Seguimiento</option><option value="won">Vendido</option><option value="lost">Perdido</option></select></div>
+        <div class="form-field"><label>Próximo seguimiento</label><input id="manageFollowUp" type="datetime-local"></div>
+        <div class="form-field full"><label>Nota de seguimiento</label><textarea id="manageFollowNote" placeholder="Ej: volver a escribirle por la tarde, espera presupuesto, consultar stock..."></textarea></div>
+        <div class="form-field full"><label>Motivo de pérdida</label><input id="manageLossReason" placeholder="Precio, no respondió, compró en otro lado..."></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-light" onclick="closeLeadModal()">Cancelar</button><button class="btn btn-dark" onclick="saveLeadManagement()">Guardar</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="clientProfileModal" class="modal hide">
+  <div class="modal-card" style="width:min(760px,96vw)">
+    <div class="modal-head"><h3 id="profileTitle">Ficha del cliente</h3><button class="modal-close" onclick="closeClientProfile()">Cerrar</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="profileClientId">
+      <div id="profileKpis" class="profile-kpis"></div>
+      <div class="form-grid">
+        <div class="form-field"><label>Contacto principal</label><input id="profileContact"></div>
+        <div class="form-field"><label>Instagram</label><input id="profileInstagram" placeholder="@marca"></div>
+        <div class="form-field"><label>Sitio web</label><input id="profileWebsite" placeholder="https://..."></div>
+        <div class="form-field"><label>Presupuesto mensual Meta Ads</label><input id="profileBudget" type="number" min="0" step="0.01"></div>
+        <div class="form-field full"><label>Objetivo del negocio</label><textarea id="profileGoal"></textarea></div>
+        <div class="form-field full"><label>Notas internas de la agencia</label><textarea id="profileNotes"></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-light" onclick="closeClientProfile()">Cancelar</button><button class="btn btn-dark" onclick="saveClientProfile()">Guardar ficha</button></div>
+    </div>
+  </div>
+</div>
 
 <div id="serviceModal" class="modal hide">
   <div class="modal-card" style="width:min(680px,96vw)">
@@ -248,6 +302,106 @@ window.registerServicePayment=async id=>{
   }catch(e){alert(e.message)}
 };
 
+const stageLabels={new:'Nuevo lead',contacted:'Contactado',quoted:'Presupuesto',follow_up:'Seguimiento',won:'Vendido',lost:'Perdido'};
+function stageOf(l){return l.pipeline_stage||(l.status==='won'?'won':l.status==='lost'?'lost':'new')}
+function stageBadge(stage){return '<span class="stage-badge stage-'+esc(stage)+'">'+esc(stageLabels[stage]||stage)+'</span>'}
+function toLocalInput(iso){
+  if(!iso)return '';
+  const d=new Date(iso); const off=d.getTimezoneOffset();
+  return new Date(d.getTime()-off*60000).toISOString().slice(0,16);
+}
+function renderToday(){
+  if(!data)return;
+  const f=data.agency_finance||{};
+  $('todayFinance').innerHTML=[
+    ['MRR agencia',money(f.mrr||0)],
+    ['Cobrado este mes',money(f.collected_this_month||0)],
+    ['Vencido por cobrar',money(f.overdue_receivable||0)],
+    ['Vence en 7 días',money(f.due_next_7_days_amount||0)]
+  ].map(x=>'<div class="today-stat"><div class="k">'+x[0]+'</div><div class="n">'+x[1]+'</div></div>').join('');
+
+  const follow=(data.today?.followups||[]);
+  $('todayFollowups').innerHTML=follow.length?follow.slice(0,10).map(l=>'<div class="attention-item"><div class="attention-main">'+esc(l.contact_name||l.phone||'Sin nombre')+' · '+esc(l.client_name)+'</div><div class="attention-sub">'+(l.overdue?'Atrasado · ':'Hoy · ')+esc(l.follow_up_note||'Seguimiento pendiente')+'</div><div class="attention-actions"><button class="btn btn-light" onclick="openChat(\''+l.id+'\')">Chat</button><button class="btn btn-dark" onclick="manageLead(\''+l.id+'\')">Gestionar</button></div></div>').join(''):'<div class="empty-state">Sin seguimientos pendientes.</div>';
+
+  const renewals=(data.today?.renewals||[]);
+  $('todayRenewals').innerHTML=renewals.length?renewals.slice(0,10).map(r=>{
+    const label=r.days<0?'Vencido hace '+Math.abs(r.days)+' día(s)':r.days===0?'Vence hoy':r.days===1?'Vence mañana':'Vence en '+r.days+' días';
+    return '<div class="attention-item"><div class="attention-main">'+esc(r.name)+'</div><div class="attention-sub">'+esc(label)+(r.service_fee!=null?' · '+money(r.service_fee):'')+'</div><div class="attention-actions"><button class="btn btn-dark" onclick="registerServicePayment(\''+r.id+'\')">Registrar pago</button><button class="btn btn-light" onclick="openService(\''+r.id+'\')">Servicio</button></div></div>';
+  }).join(''):'<div class="empty-state">Sin renovaciones urgentes.</div>';
+
+  const alerts=(data.today?.ad_alerts||[]);
+  $('todayAlerts').innerHTML=alerts.length?alerts.slice(0,10).map(a=>'<div class="attention-item"><div class="attention-main '+(a.severity==='critical'?'bad':'warn')+'">'+esc(a.client_name)+' · '+esc(a.ad||'Anuncio')+'</div><div class="attention-sub">'+esc(a.message)+'</div><div class="attention-actions"><button class="btn btn-light" onclick="viewClient(\''+a.client_id+'\')">Ver cliente</button></div></div>').join(''):'<div class="empty-state">Sin alertas importantes.</div>';
+
+  const total=follow.length+renewals.length+alerts.length;
+  $('todaySummary').textContent=total?total+' asunto'+(total===1?'':'s')+' para revisar':'Todo al día';
+}
+function renderPipeline(){
+  if(!data)return;
+  const stages=['new','contacted','quoted','follow_up','won','lost'];
+  const leads=[...(data.leads||[])];
+  $('pipelineCount').textContent=leads.length+' conversación'+(leads.length===1?'':'es');
+  $('pipelineBoard').innerHTML=stages.map(stage=>{
+    const rows=leads.filter(l=>stageOf(l)===stage);
+    return '<div class="pipe-col"><div class="pipe-head"><span>'+esc(stageLabels[stage])+'</span><span>'+rows.length+'</span></div>'+
+      (rows.length?rows.slice(0,20).map(l=>'<div class="pipe-card" onclick="manageLead(\''+l.id+'\')"><div class="pipe-name">'+esc(l.contact_name||l.phone||'Sin nombre')+'</div><div class="pipe-meta">'+esc(l.client_name)+'<br>'+esc(l.meta_ad_name||l.referral_headline||(l.ctwa_clid?'Meta Ads':'Orgánico'))+'</div>'+(l.follow_up_at?'<div class="pipe-follow">Seguimiento: '+new Date(l.follow_up_at).toLocaleString('es-AR')+'</div>':'')+'</div>').join(''):'<div class="empty-state" style="padding:18px 8px">Sin chats</div>')+
+    '</div>';
+  }).join('');
+}
+window.closeLeadModal=()=>{$('leadModal').classList.add('hide')};
+window.manageLead=id=>{
+  const l=(data?.leads||[]).find(x=>x.id===id)||(data?.today?.followups||[]).find(x=>x.id===id); if(!l)return;
+  $('manageLeadId').value=id;
+  $('leadModalTitle').textContent='Gestionar — '+(l.contact_name||l.phone||'Conversación');
+  $('manageStage').value=stageOf(l);
+  $('manageFollowUp').value=toLocalInput(l.follow_up_at);
+  $('manageFollowNote').value=l.follow_up_note||'';
+  $('manageLossReason').value=l.loss_reason||'';
+  $('leadModal').classList.remove('hide');
+};
+window.saveLeadManagement=async()=>{
+  const id=$('manageLeadId').value, stage=$('manageStage').value;
+  const local=$('manageFollowUp').value;
+  try{
+    await api('/api/lead',{method:'PATCH',body:JSON.stringify({
+      id,pipeline_stage:stage,
+      follow_up_at:local?new Date(local).toISOString():null,
+      follow_up_note:$('manageFollowNote').value.trim()||null,
+      loss_reason:$('manageLossReason').value.trim()||null
+    })});
+    closeLeadModal();showToast('Conversación actualizada');await load();
+  }catch(e){alert(e.message)}
+};
+window.closeClientProfile=()=>{$('clientProfileModal').classList.add('hide')};
+window.openClientProfile=id=>{
+  const c=(data?.by_client||[]).find(x=>x.id===id)||(data?.clients||[]).find(x=>x.id===id);if(!c)return;
+  $('profileClientId').value=id;$('profileTitle').textContent='Ficha — '+c.name;
+  $('profileContact').value=c.primary_contact_name||'';
+  $('profileInstagram').value=c.instagram_handle||'';
+  $('profileWebsite').value=c.website_url||'';
+  $('profileBudget').value=c.monthly_ad_budget??'';
+  $('profileGoal').value=c.business_goal||'';
+  $('profileNotes').value=c.internal_notes||'';
+  $('profileKpis').innerHTML=[
+    ['Gasto',money(c.spend||0)],['Chats',c.conversations??'—'],['Ventas',c.purchases??'—'],['CPA',c.cpa==null?'—':money(c.cpa)]
+  ].map(x=>'<div class="profile-kpi"><span class="k">'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');
+  $('clientProfileModal').classList.remove('hide');
+};
+window.saveClientProfile=async()=>{
+  const id=$('profileClientId').value;
+  try{
+    await api('/api/clients',{method:'PATCH',body:JSON.stringify({
+      id,
+      primary_contact_name:$('profileContact').value.trim()||null,
+      instagram_handle:$('profileInstagram').value.trim()||null,
+      website_url:$('profileWebsite').value.trim()||null,
+      monthly_ad_budget:$('profileBudget').value||null,
+      business_goal:$('profileGoal').value.trim()||null,
+      internal_notes:$('profileNotes').value.trim()||null
+    })});
+    closeClientProfile();showToast('Ficha del cliente actualizada');await load();
+  }catch(e){alert(e.message)}
+};
+
 function aggregateAdRows(rows){
   const a={spend:0,leads:0,purchases:0,revenue:0};
   for(const x of rows){a.spend+=Number(x.spend||0);a.leads+=Number(x.leads||0);a.purchases+=Number(x.purchases||0);a.revenue+=Number(x.revenue||0)}
@@ -347,21 +501,25 @@ function renderLeads(){
   const q=($('leadSearch')?.value||'').trim().toLowerCase();
   let rows=[...(data.leads||[])];
   rows=rows.filter(l=>{
+    const stage=stageOf(l);
     if(leadFilter==='ads'&&!l.ctwa_clid)return false;
     if(leadFilter==='organic'&&l.ctwa_clid)return false;
-    if(leadFilter==='won'&&l.status!=='won')return false;
-    if(leadFilter==='open'&&l.status==='won')return false;
+    if(leadFilter==='won'&&stage!=='won')return false;
+    if(leadFilter==='lost'&&stage!=='lost')return false;
+    if(leadFilter==='followup'&&stage!=='follow_up')return false;
+    if(leadFilter==='open'&&['won','lost'].includes(stage))return false;
     if(!q)return true;
-    return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text].some(v=>String(v||'').toLowerCase().includes(q));
+    return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text,l.follow_up_note].some(v=>String(v||'').toLowerCase().includes(q));
   });
   $('leadsCount').textContent=rows.length+' conversación'+(rows.length===1?'':'es');
   $('leadsBody').innerHTML=rows.map(l=>{
-    const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), won=l.status==='won';
+    const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), stage=stageOf(l), won=stage==='won';
+    const follow=l.follow_up_at?new Date(l.follow_up_at).toLocaleString('es-AR'):'—';
     return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
     <td>${l.ctwa_clid?'<span class="good">Meta Ads</span>':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
-    <td class="${won?'good':''}">${won?'Venta':'Abierto'}</td><td>${s?money(s):'—'}</td>
-    <td><button class="btn btn-light" onclick="openChat('${l.id}')">Ver chat</button> ${won?'':`<button class="btn btn-dark" onclick="sale('${l.id}')">Marcar venta</button> <button class="btn btn-light" onclick="pay('${l.id}')">Link MP</button>`}</td></tr>`
-  }).join('')||'<tr><td colspan="8" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
+    <td>${stageBadge(stage)}</td><td>${esc(follow)}</td><td>${s?money(s):(won?'Venta':'—')}</td>
+    <td><button class="btn btn-light" onclick="openChat('${l.id}')">Chat</button> <button class="btn btn-light" onclick="manageLead('${l.id}')">Gestionar</button> ${won?'':`<button class="btn btn-dark" onclick="sale('${l.id}')">Venta</button>`}</td></tr>`
+  }).join('')||'<tr><td colspan="9" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
 }
 
 async function load(){
@@ -392,12 +550,13 @@ async function load(){
       <td>${money(c.revenue)}</td><td>${money(c.spend)}</td>
       <td>${c.cpa==null?'—':money(c.cpa)}</td>
       <td class="${c.roas>=1?'good':'bad'}">${c.roas==null?'—':c.roas.toFixed(2)+'x'}</td>
-      <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button></td>
+      <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="openClientProfile('${c.id}')">Ficha</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Meta</button></td>
     </tr>`).join('')||'<tr><td colspan="10" class="muted">No hay clientes activos.</td></tr>';
 
+    renderToday();
     renderServices();
+    renderPipeline();
     renderAds();
-
     renderLeads();
     $('lastUpdate').innerHTML='<span class="loading-dot"></span>Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     $('refresh').textContent='↻ Actualizar';
@@ -473,6 +632,8 @@ window.openMessages=async(clientId,adId,adName)=>{
 };
 $('messagesModal').addEventListener('click',e=>{if(e.target===$('messagesModal'))closeMessages()});
 $('serviceModal').addEventListener('click',e=>{if(e.target===$('serviceModal'))closeServiceModal()});
+$('leadModal').addEventListener('click',e=>{if(e.target===$('leadModal'))closeLeadModal()});
+$('clientProfileModal').addEventListener('click',e=>{if(e.target===$('clientProfileModal'))closeClientProfile()});
 
 window.viewClient=id=>{$('clientFilter').value=id;load()};
 
