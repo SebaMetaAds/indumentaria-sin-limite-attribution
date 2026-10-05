@@ -17,6 +17,9 @@ export default async function handler(req, res) {
       if (lead.status === 'won') return sendJson(res, 200, { lead, marked: true, duplicate: true });
       const rows = await patch('leads', { id: `eq.${body.leadId}` }, {
         status: 'won',
+        pipeline_stage: 'won',
+        pipeline_updated_at: new Date().toISOString(),
+        follow_up_at: null,
         updated_at: new Date().toISOString()
       });
       return sendJson(res, 200, { lead: rows?.[0] || lead, marked: true, duplicate: false });
