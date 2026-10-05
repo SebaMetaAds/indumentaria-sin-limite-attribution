@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
     let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
     let taskQuery = 'select=*&status=eq.open&order=due_at.asc.nullslast,created_at.desc&limit=1000';
-    let aliasPaymentQuery = 'select=*&alias_detected_at=not.is.null&order=alias_detected_at.desc&limit=2000';
+    let aliasPaymentQuery = 'select=*&payment_signal_detected_at=not.is.null&order=payment_signal_detected_at.desc&limit=2000';
     if (requestedClientId) {
       paymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
       followUpQuery += `&client_id=eq.${enc(requestedClientId)}`;
