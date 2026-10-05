@@ -138,6 +138,24 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 </div>
 <div id="toast" class="toast"></div>
 
+<div id="saleModal" class="modal hide">
+  <div class="modal-card" style="width:min(560px,96vw)">
+    <div class="modal-head"><h3 id="saleModalTitle">Registrar venta</h3><button class="modal-close" onclick="closeSaleModal()">Cerrar</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="saleLeadId">
+      <input type="hidden" id="saleId">
+      <input type="hidden" id="saleMode">
+      <div class="form-grid">
+        <div class="form-field"><label>Precio de venta</label><input id="saleAmount" type="number" min="1" step="0.01" placeholder="Ej: 99999"></div>
+        <div class="form-field"><label>Moneda</label><select id="saleCurrency"><option value="ARS">ARS</option><option value="USD">USD</option></select></div>
+        <div class="form-field"><label>Medio de pago</label><select id="salePaymentMethod"><option value="transferencia">Transferencia</option><option value="efectivo">Efectivo</option><option value="mercado_pago">Mercado Pago</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select></div>
+        <div class="form-field"><label>Fecha de venta</label><input id="saleSoldAt" type="datetime-local"></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-light" onclick="closeSaleModal()">Cancelar</button><button class="btn btn-dark" onclick="saveSale()">Guardar venta</button></div>
+    </div>
+  </div>
+</div>
+
 <div id="taskModal" class="modal hide">
   <div class="modal-card" style="width:min(640px,96vw)">
     <div class="modal-head"><h3 id="taskModalTitle">Nueva tarea</h3><button class="modal-close" onclick="closeTaskModal()">Cerrar</button></div>
@@ -406,12 +424,13 @@ function renderPayments(){
     const at=l.payment_signal_detected_at?new Date(l.payment_signal_detected_at).toLocaleString('es-AR'):'—';
     const signal=paymentSignalLabel(l.payment_signal_type);
     const stage=stageOf(l);
+    const saleTotal=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0);
     return '<tr class="'+(l.payment_check_status==='pending'?'payment-highlight':'')+'">'+
       '<td><b>'+esc(l.client_name||'Cliente')+'</b></td>'+
       '<td>'+esc(l.contact_name||'Sin nombre')+'</td>'+
       '<td>'+esc(l.phone||'—')+'</td>'+
       '<td><b>'+esc(signal)+'</b><div class="entity-id">'+esc(at)+'</div>'+(l.payment_signal_text?'<div class="entity-id">“'+esc(l.payment_signal_text)+'”</div>':'')+'</td>'+
-      '<td>'+paymentBadge(l.payment_check_status)+'</td>'+
+      '<td>'+paymentBadge(l.payment_check_status)+(saleTotal?'<div class="entity-id">'+money(saleTotal)+'</div>':'')+'</td>'+
       '<td>'+stageBadge(stage)+'</td>'+
       '<td><button class="btn btn-light" onclick="openChat(\''+l.id+'\')">Ver chat</button> '+
       (l.payment_check_status!=='paid'?'<button class="btn btn-dark" onclick="setPaymentStatus(\''+l.id+'\',\'paid\')">Pagó</button> ':'')+
@@ -420,9 +439,52 @@ function renderPayments(){
       '</td></tr>';
   }).join('')||'<tr><td colspan="7" class="muted">No hay chats en este estado.</td></tr>';
 }
+window.closeSaleModal=()=>{$('saleModal').classList.add('hide')};
+window.openSaleModal=(id,mode='sale')=>{
+  const l=(data?.leads||[]).find(x=>x.id===id)||(data?.payment_queue||[]).find(x=>x.id===id);
+  if(!l)return;
+  const existing=(l.sales||[])[0]||null;
+  $('saleLeadId').value=id;
+  $('saleId').value=existing?.id||'';
+  $('saleMode').value=mode;
+  $('saleModalTitle').textContent=existing?'Editar venta — '+(l.contact_name||l.phone||'Cliente'):'Registrar venta — '+(l.contact_name||l.phone||'Cliente');
+  $('saleAmount').value=existing?.amount??'';
+  $('saleCurrency').value=existing?.currency||'ARS';
+  $('salePaymentMethod').value=existing?.payment_method||'transferencia';
+  $('saleSoldAt').value=toLocalInput(existing?.sold_at||new Date().toISOString());
+  $('saleModal').classList.remove('hide');
+  setTimeout(()=>$('saleAmount').focus(),50);
+};
+window.saveSale=async()=>{
+  const leadId=$('saleLeadId').value;
+  const saleId=$('saleId').value;
+  const mode=$('saleMode').value||'sale';
+  const amount=Number($('saleAmount').value);
+  if(!Number.isFinite(amount)||amount<=0)return alert('Ingresá un precio de venta válido');
+  const soldAt=$('saleSoldAt').value?new Date($('saleSoldAt').value).toISOString():new Date().toISOString();
+  const body={
+    leadId,
+    amount,
+    currency:$('saleCurrency').value,
+    paymentMethod:$('salePaymentMethod').value,
+    soldAt
+  };
+  if(mode==='payment') body.paymentCheckStatus='paid';
+  if(saleId){body.action='update';body.saleId=saleId;}
+  try{
+    await api('/api/sale',{method:'POST',body:JSON.stringify(body)});
+    closeSaleModal();
+    showToast(saleId?'Importe actualizado':'Venta registrada por '+money(amount));
+    await load();
+  }catch(e){alert(e.message)}
+};
+
 window.setPaymentStatus=async(id,status)=>{
   const labels={paid:'pagó',not_paid:'no pagó',pending:'queda pendiente'};
-  if(status==='paid'&&!confirm('¿Confirmás que este cliente pagó? También se marcará el chat como venta.'))return;
+  if(status==='paid'){
+    openSaleModal(id,'payment');
+    return;
+  }
   try{
     await api('/api/lead',{method:'PATCH',body:JSON.stringify({id,payment_check_status:status})});
     showToast('Pago actualizado: '+labels[status]);
@@ -441,7 +503,7 @@ function renderTasks(){
 }
 function renderTeamAnalytics(){
   const sellers=data?.seller_stats||[];
-  $('sellerStats').innerHTML=sellers.length?'<div class="table-wrap"><table><thead><tr><th>Responsable</th><th>Chats</th><th>Ventas</th><th>Perdidos</th><th>Cierre</th><th>Seguimientos</th></tr></thead><tbody>'+sellers.map(s=>'<tr><td><b>'+esc(s.name)+'</b></td><td>'+s.chats+'</td><td class="good">'+s.won+'</td><td class="bad">'+s.lost+'</td><td>'+pct(s.close_rate)+'</td><td>'+s.followups_due+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty-state">Asigná responsables a los chats para empezar a medir el equipo.</div>';
+  $('sellerStats').innerHTML=sellers.length?'<div class="table-wrap"><table><thead><tr><th>Responsable</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Ticket prom.</th><th>Perdidos</th><th>Cierre</th><th>Seguimientos</th></tr></thead><tbody>'+sellers.map(s=>'<tr><td><b>'+esc(s.name)+'</b></td><td>'+s.chats+'</td><td class="good">'+s.won+'</td><td><b>'+money(s.revenue||0)+'</b></td><td>'+money(s.average_ticket||0)+'</td><td class="bad">'+s.lost+'</td><td>'+pct(s.close_rate)+'</td><td>'+s.followups_due+'</td></tr>').join('')+'</tbody></table></div>':'<div class="empty-state">Asigná responsables a los chats para empezar a medir el equipo.</div>';
   const losses=data?.loss_reasons||[];
   const max=Math.max(1,...losses.map(x=>x.count||0));
   $('lossStats').innerHTML=losses.length?losses.slice(0,10).map(x=>'<div class="bar-row"><div class="bar-main"><span>'+esc(x.reason)+'</span><b>'+x.count+'</b></div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round((x.count/max)*100)+'%"></div></div></div>').join(''):'<div class="empty-state">Todavía no hay chats perdidos con motivo cargado.</div>';
@@ -764,14 +826,19 @@ function renderLeads(){
   });
   $('leadsCount').textContent=rows.length+' conversación'+(rows.length===1?'':'es');
   $('leadsBody').innerHTML=rows.map(l=>{
-    const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), stage=stageOf(l), won=stage==='won';
+    const saleRows=l.sales||[];
+    const s=saleRows.reduce((a,x)=>a+Number(x.amount||0),0), stage=stageOf(l), won=stage==='won';
     const follow=l.follow_up_at?new Date(l.follow_up_at).toLocaleString('es-AR'):'—';
+    const saleCell=saleRows.length?'<b>'+money(s)+'</b>':(won?'<span class="warn">Sin importe</span>':'—');
+    const saleAction=won
+      ? (saleRows.length?'<button class="btn btn-light" onclick="openSaleModal(\''+l.id+'\')">Editar importe</button>':'<button class="btn btn-dark" onclick="openSaleModal(\''+l.id+'\')">Cargar importe</button>')
+      : '<button class="btn btn-dark" onclick="openSaleModal(\''+l.id+'\')">Venta</button>';
     return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
     <td>${l.ctwa_clid?'<span class="good">Meta Ads</span>':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
     <td>${stageBadge(stage)}${l.assigned_to?'<div class="entity-id">'+esc(l.assigned_to)+'</div>':''}</td>
     <td>${l.ai_score!=null?'<span class="ai-score '+aiScoreClass(l.ai_score)+'">'+Number(l.ai_score)+'/100</span>':'<button class="btn btn-light" onclick="analyzeLead(\''+l.id+'\')">Analizar</button>'}</td>
-    <td>${esc(follow)}</td><td>${s?money(s):(won?'Venta':'—')}</td>
-    <td><button class="btn btn-light" onclick="openChat('${l.id}')">Chat</button> <button class="btn btn-light" onclick="manageLead('${l.id}')">Gestionar</button> ${won?'':`<button class="btn btn-dark" onclick="sale('${l.id}')">Venta</button>`}</td></tr>`
+    <td>${esc(follow)}</td><td>${saleCell}</td>
+    <td><button class="btn btn-light" onclick="openChat('${l.id}')">Chat</button> <button class="btn btn-light" onclick="manageLead('${l.id}')">Gestionar</button> ${saleAction}</td></tr>`
   }).join('')||'<tr><td colspan="10" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
 }
 
@@ -902,6 +969,7 @@ window.openMessages=async(clientId,adId,adName)=>{
 };
 $('messagesModal').addEventListener('click',e=>{if(e.target===$('messagesModal'))closeMessages()});
 $('serviceModal').addEventListener('click',e=>{if(e.target===$('serviceModal'))closeServiceModal()});
+$('saleModal').addEventListener('click',e=>{if(e.target===$('saleModal'))closeSaleModal()});
 $('taskModal').addEventListener('click',e=>{if(e.target===$('taskModal'))closeTaskModal()});
 $('leadModal').addEventListener('click',e=>{if(e.target===$('leadModal'))closeLeadModal()});
 $('clientProfileModal').addEventListener('click',e=>{if(e.target===$('clientProfileModal'))closeClientProfile()});
@@ -935,14 +1003,7 @@ window.addClient=async()=>{
   }catch(e){alert(e.message)}
 };
 
-window.sale=async id=>{
-  if(!confirm('¿Confirmás que este chat terminó en venta?'))return;
-  try{
-    await api('/api/sale',{method:'POST',body:JSON.stringify({leadId:id})});
-    showToast('Chat marcado como venta');
-    await load();
-  }catch(e){alert(e.message)}
-};
+window.sale=id=>openSaleModal(id,'sale');
 
 window.pay=async id=>{
   const amount=prompt('Monto a cobrar por Mercado Pago (ARS):');if(!amount)return;
