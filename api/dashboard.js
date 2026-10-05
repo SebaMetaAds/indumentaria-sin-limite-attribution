@@ -58,8 +58,12 @@ export default async function handler(req, res) {
       const key = `${insight.client_id}:${insight.ad_id}`;
       byAd.set(key, {
         client_id: insight.client_id, client_name: insight.client_name,
-        ad_id: insight.ad_id, campaign: insight.campaign_name || '',
-        adset: insight.adset_name || '', ad: insight.ad_name || '',
+        ad_id: insight.ad_id,
+        campaign_id: insight.campaign_id || null,
+        campaign: insight.campaign_name || '',
+        adset_id: insight.adset_id || null,
+        adset: insight.adset_name || '',
+        ad: insight.ad_name || '',
         spend: n(insight.spend), leads: 0, purchases: 0, revenue: 0
       });
     }
@@ -70,8 +74,12 @@ export default async function handler(req, res) {
       if (!byAd.has(key)) {
         byAd.set(key, {
           client_id: l.client_id, client_name: client?.name || 'Cliente',
-          ad_id: l.meta_ad_id || 'sin_ad', campaign: l.meta_campaign_name || '',
-          adset: l.meta_adset_name || '', ad: l.meta_ad_name || l.referral_headline || 'Sin nombre',
+          ad_id: l.meta_ad_id || 'sin_ad',
+          campaign_id: l.meta_campaign_id || null,
+          campaign: l.meta_campaign_name || '',
+          adset_id: l.meta_adset_id || null,
+          adset: l.meta_adset_name || '',
+          ad: l.meta_ad_name || l.referral_headline || 'Sin nombre',
           spend: 0, leads: 0, purchases: 0, revenue: 0
         });
       }
@@ -85,7 +93,7 @@ export default async function handler(req, res) {
       cpa: x.purchases ? x.spend / x.purchases : null,
       roas: x.spend ? x.revenue / x.spend : null,
       close_rate: x.leads ? x.purchases / x.leads : null
-    })).sort((a,b) => b.revenue - a.revenue || b.spend - a.spend);
+    })).sort((a,b) => b.spend - a.spend || b.revenue - a.revenue);
 
     const byClient = selectedClients.map(client => {
       const cLeads = (leads || []).filter(l => l.client_id === client.id);
