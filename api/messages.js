@@ -1,8 +1,16 @@
 import { sendJson, requireAdmin, isoRange } from '../lib/http.js';
 import { select } from '../lib/supabase.js';
 import { getMessagesForClient } from '../lib/messages.js';
+import { signedMediaUrl } from '../lib/media.js';
 
 function enc(v) { return encodeURIComponent(v); }
+
+function withMediaUrls(messages) {
+  return (messages || []).map(m => ({
+    ...m,
+    media_url: m.media_id ? signedMediaUrl(m.id) : null
+  }));
+}
 
 export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
@@ -18,7 +26,7 @@ export default async function handler(req, res) {
       const messages = await select('messages', `select=*&lead_id=eq.${enc(leadId)}&order=received_at.asc&limit=3000`);
       return sendJson(res, 200, {
         lead,
-        messages: messages || [],
+        messages: withMediaUrls(messages),
         total_messages: (messages || []).length
       });
     }
@@ -49,7 +57,7 @@ export default async function handler(req, res) {
 
     const conversations = (leads || []).map(lead => ({
       ...lead,
-      messages: byLead.get(lead.id) || []
+      messages: withMediaUrls(byLead.get(lead.id) || [])
     })).filter(x => x.messages.length > 0);
 
     return sendJson(res, 200, {
