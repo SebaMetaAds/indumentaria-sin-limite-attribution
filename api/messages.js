@@ -17,19 +17,6 @@ function withMediaUrls(messages) {
 }
 
 export default async function handler(req, res) {
-  if (req.method==='GET' && req.query?.audio_test_token && req.query.audio_test_token===process.env.AI_TEST_TOKEN) {
-    try{
-      const messageId=req.query?.message_id;
-      const msgRows=await select('messages',`select=*&id=eq.${enc(messageId)}&limit=1`);
-      const message=msgRows?.[0];
-      if(!message) return sendJson(res,404,{error:'Audio no encontrado'});
-      const client=await findClientById(message.client_id);
-      const result=await transcribeWhatsAppAudio(message,client);
-      return sendJson(res,200,{ok:true,text:result.text,model:result.model});
-    }catch(error){
-      return sendJson(res,500,{ok:false,error:error.message});
-    }
-  }
   if (!requireAdmin(req, res)) return;
   if (!['GET','POST'].includes(req.method)) return sendJson(res, 405, { error: 'Método no permitido' });
 
