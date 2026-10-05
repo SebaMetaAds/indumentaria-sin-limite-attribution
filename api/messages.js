@@ -9,9 +9,23 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return sendJson(res, 405, { error: 'Método no permitido' });
 
   try {
+    const leadId = req.query?.lead_id;
+    if (leadId) {
+      const leadRows = await select('leads', `select=id,client_id,phone,contact_name,status,source,ctwa_clid,meta_campaign_name,meta_adset_name,meta_ad_name,meta_ad_id,first_message_at,last_message_at&id=eq.${enc(leadId)}&limit=1`);
+      const lead = leadRows?.[0];
+      if (!lead) return sendJson(res, 404, { error: 'Conversación no encontrada' });
+
+      const messages = await select('messages', `select=*&lead_id=eq.${enc(leadId)}&order=received_at.asc&limit=3000`);
+      return sendJson(res, 200, {
+        lead,
+        messages: messages || [],
+        total_messages: (messages || []).length
+      });
+    }
+
     const clientId = req.query?.client_id;
     const adId = req.query?.ad_id;
-    if (!clientId || !adId) return sendJson(res, 400, { error: 'client_id y ad_id son requeridos' });
+    if (!clientId || !adId) return sendJson(res, 400, { error: 'lead_id o client_id + ad_id son requeridos' });
 
     const { since, until, days } = isoRange(req.query || {});
     let leadQuery = `select=id,phone,contact_name,status,ctwa_clid,meta_campaign_name,meta_adset_name,meta_ad_name,meta_ad_id,first_message_at,last_message_at&client_id=eq.${enc(clientId)}&first_message_at=gte.${enc(since)}&first_message_at=lte.${enc(until)}&order=first_message_at.desc&limit=1000`;
