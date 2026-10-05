@@ -16,15 +16,38 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Método no permitido' });
+
   try {
     const body = readJsonBody(req);
     const messages = extractMessages(body);
     const captured = [];
+    const errors = [];
+
     for (const msg of messages) {
       if (!msg.phone) continue;
-      captured.push(await captureInboundMessage(msg));
+      try {
+        const lead = await captureInboundMessage(msg);
+        if (lead) captured.push(lead.id);
+      } catch (error) {
+        console.error('whatsapp message capture', {
+          waba_id: msg.waba_id,
+          phone_number_id: msg.phone_number_id,
+          error: error.message
+        });
+        errors.push({
+          waba_id: msg.waba_id || null,
+          phone_number_id: msg.phone_number_id || null,
+          error: error.message
+        });
+      }
     }
-    return sendJson(res, 200, { ok: true, messages: messages.length, captured: captured.length });
+
+    return sendJson(res, 200, {
+      ok: true,
+      messages: messages.length,
+      captured: captured.length,
+      errors: errors.length
+    });
   } catch (error) {
     console.error('whatsapp-webhook', error);
     return sendJson(res, 200, { ok: true, warning: error.message });
