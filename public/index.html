@@ -86,7 +86,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
       <button class="chip active" data-payment-filter="pending">Pendientes</button>
       <button class="chip" data-payment-filter="paid">Pagaron</button>
       <button class="chip" data-payment-filter="not_paid">No pagaron</button>
-      <button class="chip" data-payment-filter="all">Todos con ALIAS</button>
+      <button class="chip" data-payment-filter="all">Todos detectados</button>
     </div>
   </div>
   <div class="table-wrap"><table>
@@ -134,7 +134,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="alias">ALIAS</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="payment">Pagos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -371,6 +371,22 @@ function toLocalInput(iso){
 }
 const priorityLabels={low:'Baja',normal:'Normal',high:'Alta',urgent:'Urgente'};
 const paymentLabels={pending:'Pendiente',paid:'Pagó',not_paid:'No pagó',none:'Sin revisar'};
+const signalLabels={
+  alias:'ALIAS',
+  te_transferi:'Te transferí',
+  ya_pague:'Ya pagué',
+  comprobante:'Comprobante',
+  transferencia_realizada:'Transferencia realizada',
+  te_pague:'Te pagué',
+  ya_transferi:'Ya transferí',
+  pago_realizado:'Pago realizado',
+  abone:'Aboné',
+  hice_transferencia:'Hice la transferencia',
+  transferencia_hecha:'Transferencia hecha',
+  mande_comprobante:'Mandé comprobante',
+  pago_hecho:'Pago hecho'
+};
+function paymentSignalLabel(type){return signalLabels[type]||'Señal de pago'}
 function paymentBadge(status){
   status=status||'pending';
   return '<span class="pay-status pay-'+esc(status)+'">'+esc(paymentLabels[status]||status)+'</span>';
@@ -386,13 +402,14 @@ function renderPayments(){
   if(paymentFilter!=='all') rows=rows.filter(x=>x.payment_check_status===paymentFilter);
   $('paymentsCount').textContent=rows.length+' chat'+(rows.length===1?'':'s');
   $('paymentsBody').innerHTML=rows.map(l=>{
-    const at=l.alias_detected_at?new Date(l.alias_detected_at).toLocaleString('es-AR'):'—';
+    const at=l.payment_signal_detected_at?new Date(l.payment_signal_detected_at).toLocaleString('es-AR'):'—';
+    const signal=paymentSignalLabel(l.payment_signal_type);
     const stage=stageOf(l);
     return '<tr class="'+(l.payment_check_status==='pending'?'payment-highlight':'')+'">'+
       '<td><b>'+esc(l.client_name||'Cliente')+'</b></td>'+
       '<td>'+esc(l.contact_name||'Sin nombre')+'</td>'+
       '<td>'+esc(l.phone||'—')+'</td>'+
-      '<td>'+esc(at)+'</td>'+
+      '<td><b>'+esc(signal)+'</b><div class="entity-id">'+esc(at)+'</div>'+(l.payment_signal_text?'<div class="entity-id">“'+esc(l.payment_signal_text)+'”</div>':'')+'</td>'+
       '<td>'+paymentBadge(l.payment_check_status)+'</td>'+
       '<td>'+stageBadge(stage)+'</td>'+
       '<td><button class="btn btn-light" onclick="openChat(\''+l.id+'\')">Ver chat</button> '+
@@ -739,7 +756,7 @@ function renderLeads(){
     if(leadFilter==='lost'&&stage!=='lost')return false;
     if(leadFilter==='followup'&&stage!=='follow_up')return false;
     if(leadFilter==='ai'&&!(Number(l.ai_score||0)>=70||l.ai_requires_attention===true))return false;
-    if(leadFilter==='alias'&&!l.alias_detected_at)return false;
+    if(leadFilter==='payment'&&!l.payment_signal_detected_at)return false;
     if(leadFilter==='open'&&['won','lost'].includes(stage))return false;
     if(!q)return true;
     return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text,l.follow_up_note].some(v=>String(v||'').toLowerCase().includes(q));
