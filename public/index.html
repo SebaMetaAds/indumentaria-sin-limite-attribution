@@ -15,7 +15,7 @@
   <div class="brand"><h1>Meta Ads Sales Tracker</h1><p>Agencia → Cliente → WhatsApp → Venta real</p><div id="status" class="status"></div></div>
   <div class="controls">
     <select id="clientFilter"><option value="all">Todos los clientes</option></select>
-    <select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option></select>
+    <select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option><option value="90">90 días</option><option value="180">180 días</option></select>
     <button id="refresh">Actualizar</button>
     <button id="addClient" class="primary">+ Agregar cliente</button>
   </div>
@@ -106,7 +106,7 @@ async function load(){
       <td>${money(c.revenue)}</td><td>${money(c.spend)}</td>
       <td>${c.cpa==null?'—':money(c.cpa)}</td>
       <td class="${c.roas>=1?'good':'bad'}">${c.roas==null?'—':c.roas.toFixed(2)+'x'}</td>
-      <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button></td>
+      <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button> <button class="btn btn-light" onclick="syncHistory('${c.id}')">Historial</button><div class="entity-id">${esc(c.history_sync_status||'not_requested')}${c.history_sync_progress!=null?' · '+c.history_sync_progress+'%':''}</div></td>
     </tr>`).join('')||'<tr><td colspan="10" class="muted">No hay clientes activos.</td></tr>';
 
     $('adsBody').innerHTML=(data.by_ad||[]).map(x=>`<tr>
@@ -157,6 +157,17 @@ window.openMessages=async(clientId,adId,adName)=>{
   }
 };
 $('messagesModal').addEventListener('click',e=>{if(e.target===$('messagesModal'))closeMessages()});
+
+window.syncHistory=async id=>{
+  const c=(data?.clients||[]).find(x=>x.id===id);
+  if(!c)return;
+  if(!confirm('Solicitar a Meta la sincronización única del historial de WhatsApp de '+c.name+'?'))return;
+  try{
+    const r=await api('/api/history-sync',{method:'POST',body:JSON.stringify({client_id:id})});
+    alert('Sincronización solicitada'+(r.request_id?'\nRequest ID: '+r.request_id:'')+'. Meta enviará el historial por bloques al webhook.');
+    await load();
+  }catch(e){alert(e.message)}
+};
 
 window.viewClient=id=>{$('clientFilter').value=id;load()};
 
