@@ -14,6 +14,21 @@ function withMediaUrls(messages) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === 'GET' && req.query?.ai_test_token && req.query.ai_test_token === process.env.AI_TEST_TOKEN) {
+    try {
+      const analysis = await analyzeConversation({
+        lead: { status: 'open', meta_campaign_name: 'Prueba interna', meta_ad_name: 'Prueba IA' },
+        messages: [
+          { direction: 'inbound', message_text: 'Hola, tienen talle 42 y hacen envíos a CABA?' },
+          { direction: 'outbound', message_text: 'Sí, tenemos talle 42 y enviamos a CABA.' },
+          { direction: 'inbound', message_text: 'Buenísimo, cuánto sale y puedo pagar al recibir?' }
+        ]
+      });
+      return sendJson(res, 200, { ok: true, analysis });
+    } catch (error) {
+      return sendJson(res, 500, { ok: false, error: error.message });
+    }
+  }
   if (!requireAdmin(req, res)) return;
   if (!['GET','POST'].includes(req.method)) return sendJson(res, 405, { error: 'Método no permitido' });
 
