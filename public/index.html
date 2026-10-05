@@ -61,7 +61,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">Gasto</div><span class="metric-arrow">→</span></div><div id="spend" class="v">—</div><div class="s">Meta Ads</div></div>
 <div class="card interactive" onclick="focusSection('leadsSection')"><div class="metric-click"><div class="k">Conversaciones</div><span class="metric-arrow">→</span></div><div id="conversations" class="v">—</div><div id="attributed" class="s">—</div></div>
 <div class="card interactive" onclick="setLeadFilter('won',true)"><div class="metric-click"><div class="k">Ventas</div><span class="metric-arrow">→</span></div><div id="purchases" class="v">—</div><div id="close" class="s">—</div></div>
-<div class="card interactive" onclick="setLeadFilter('won',true)"><div class="metric-click"><div class="k">Facturación</div><span class="metric-arrow">→</span></div><div id="revenue" class="v">—</div><div class="s">ventas registradas</div></div>
+<div class="card interactive" onclick="setLeadFilter('won',true)"><div class="metric-click"><div class="k">Facturación</div><span class="metric-arrow">→</span></div><div id="revenue" class="v">—</div><div id="revenueNote" class="s">ventas registradas</div></div>
 <div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">CPA real</div><span class="metric-arrow">→</span></div><div id="cpa" class="v">—</div><div class="s">gasto / ventas</div></div>
 <div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">ROAS real</div><span class="metric-arrow">→</span></div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
 </div>
@@ -871,6 +871,9 @@ async function load(){
     $('purchases').textContent=data.totals.purchases;
     $('close').textContent=`Cierre ${pct(data.totals.close_rate)}`;
     $('revenue').textContent=money(data.totals.revenue);
+    $('revenueNote').textContent=data.totals.unpriced_sales
+      ? data.totals.unpriced_sales+' venta'+(data.totals.unpriced_sales===1?'':'s')+' sin importe'
+      : 'facturación registrada';
     $('cpa').textContent=data.totals.purchases?money(data.totals.cpa):'—';
     $('roas').textContent=data.totals.spend?`${data.totals.roas.toFixed(2)}x`:'—';
 
