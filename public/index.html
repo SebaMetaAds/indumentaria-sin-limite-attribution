@@ -127,8 +127,11 @@ window.editClient=async id=>{
   const phoneId=prompt('Phone Number ID de WhatsApp',c.phone_number_id||''); if(phoneId===null)return;
   const ad=prompt('Cuenta publicitaria (act_...)',c.ad_account_id||''); if(ad===null)return;
   const dataset=prompt('Dataset ID para Purchase CAPI',c.dataset_id||''); if(dataset===null)return;
+  const token=prompt(c.meta_token_configured?'Token Meta ya configurado. Pegá uno nuevo sólo si querés reemplazarlo:':'Pegá el token de Meta de este cliente:',''); if(token===null)return;
+  const payload={id,whatsapp_number:whatsapp,waba_id:waba,phone_number_id:phoneId,ad_account_id:ad,dataset_id:dataset};
+  if(token.trim()) payload.meta_access_token=token.trim();
   try{
-    await api('/api/clients',{method:'PATCH',body:JSON.stringify({id,whatsapp_number:whatsapp,waba_id:waba,phone_number_id:phoneId,ad_account_id:ad,dataset_id:dataset})});
+    await api('/api/clients',{method:'PATCH',body:JSON.stringify(payload)});
     await load();
   }catch(e){alert(e.message)}
 };
