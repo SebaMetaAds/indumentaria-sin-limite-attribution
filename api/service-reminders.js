@@ -2,6 +2,9 @@ import { sendJson, requireAdmin } from '../lib/http.js';
 import { insert, patch, select } from '../lib/supabase.js';
 import { agencyWhatsAppConfigured, sendRenewalReminder } from '../lib/agency-whatsapp.js';
 import { analyzeConversation } from '../lib/ai-analysis.js';
+import { transcribeWhatsAppAudio } from '../lib/transcription.js';
+import { findClientById } from '../lib/clients.js';
+import { detectPaymentSignal } from '../lib/payment-signals.js';
 
 function enc(v){return encodeURIComponent(v);}
 
@@ -83,6 +86,41 @@ export default async function handler(req,res){
       }
     }
 
+    const audioCandidates=await select('messages',
+      'select=*&message_type=eq.audio&media_id=not.is.null&transcript_status=eq.none&order=received_at.desc&limit=5');
+    const transcriptionResults=[];
+    for(const message of audioCandidates||[]){
+      try{
+        const client=await findClientById(message.client_id);
+        if(!client) throw new Error('Cliente no encontrado');
+        await patch('messages',{id:`eq.${message.id}`},{transcript_status:'pending',transcript_error:null});
+        const transcript=await transcribeWhatsAppAudio(message,client);
+        const now=new Date().toISOString();
+        await patch('messages',{id:`eq.${message.id}`},{
+          transcript_text:transcript.text,transcript_status:'done',transcript_model:transcript.model,transcript_at:now,transcript_error:null
+        });
+        const signal=detectPaymentSignal(transcript.text);
+        if(signal){
+          const leadRows=await select('leads',`select=*&id=eq.${enc(message.lead_id)}&limit=1`);
+          const lead=leadRows?.[0];
+          if(lead) await patch('leads',{id:`eq.${lead.id}`},{
+            payment_signal_detected_at:message.received_at,payment_signal_type:signal.type,
+            payment_signal_text:signal.text,payment_signal_message_id:message.message_id,
+            payment_check_status:lead.payment_check_status==='paid'?'paid':'pending',
+            payment_checked_at:lead.payment_check_status==='paid'?lead.payment_checked_at||null:null,
+            updated_at:now
+          });
+        }
+        transcriptionResults.push({message_id:message.id,status:'done'});
+      }catch(error){
+        const unavailable=/payment|billing|credit|card|quota/i.test(error.message);
+        await patch('messages',{id:`eq.${message.id}`},{
+          transcript_status:unavailable?'unavailable':'error',transcript_error:error.message,transcript_at:new Date().toISOString()
+        }).catch(()=>{});
+        transcriptionResults.push({message_id:message.id,status:unavailable?'unavailable':'error'});
+      }
+    }
+
     const cutoff=Date.now()-(14*86400000);
     const openLeads=await select('leads','select=*&status=eq.open&order=last_message_at.desc&limit=40');
     const aiCandidates=(openLeads||[])
@@ -96,8 +134,8 @@ export default async function handler(req,res){
     const aiResults=await Promise.all(aiCandidates.map(async lead=>{
       try{
         const messages=await select('messages',
-          `select=direction,message_type,message_text,received_at&lead_id=eq.${enc(lead.id)}&order=received_at.asc&limit=300`);
-        const textCount=(messages||[]).filter(m=>m.message_text&&String(m.message_text).trim()).length;
+          `select=direction,message_type,message_text,transcript_text,received_at&lead_id=eq.${enc(lead.id)}&order=received_at.asc&limit=300`);
+        const textCount=(messages||[]).filter(m=>(m.message_text||m.transcript_text)&&String(m.message_text||m.transcript_text).trim()).length;
         if(textCount<3) return {lead_id:lead.id,status:'skipped',reason:'Poco texto'};
 
         const analysis=await analyzeConversation({lead,messages});
@@ -128,6 +166,11 @@ export default async function handler(req,res){
       date:today,
       sender_configured:configured,
       results,
+      transcription:{
+        candidates:(audioCandidates||[]).length,
+        completed:transcriptionResults.filter(x=>x.status==='done').length,
+        results:transcriptionResults
+      },
       ai_analysis:{
         candidates:aiCandidates.length,
         analyzed:aiResults.filter(x=>x.status==='analyzed').length,
