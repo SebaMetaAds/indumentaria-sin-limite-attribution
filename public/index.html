@@ -1,42 +1,167 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>IndumentariaSinLimite | Atribución</title>
-  <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1280px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.brand h1{font-size:22px;margin:0}.brand p{margin:5px 0 0;color:#6b7280;font-size:13px}.controls{display:flex;gap:8px}.controls select,.controls button{border:1px solid #d1d5db;border-radius:10px;background:white;padding:10px 12px}.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px #0000000a}.card .k{font-size:12px;color:#6b7280;margin-bottom:8px}.card .v{font-size:24px;font-weight:750}.card .s{font-size:11px;color:#9ca3af;margin-top:5px}.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-top:16px;overflow:hidden}.section-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #e5e7eb}.section-head h2{font-size:15px;margin:0}.badge{font-size:11px;padding:5px 8px;border-radius:999px;background:#f3f4f6;color:#4b5563}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:11px 12px;border-bottom:1px solid #f3f4f6;text-align:left;white-space:nowrap}th{color:#6b7280;font-weight:600;background:#fafafa}.good{color:#166534}.bad{color:#991b1b}.muted{color:#9ca3af}.btn{border:0;border-radius:8px;padding:7px 9px;font-size:11px;cursor:pointer}.btn-sale{background:#111827;color:white}.btn-link{background:#e5e7eb;color:#111827}.status{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pill{font-size:11px;padding:6px 9px;border-radius:999px;background:#fff;border:1px solid #e5e7eb}.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;background:#9ca3af}.on .dot{background:#16a34a}.error{padding:14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;margin-bottom:14px;display:none}.login{position:fixed;inset:0;background:#111827e8;display:flex;align-items:center;justify-content:center;z-index:10}.login-card{width:min(420px,90vw);background:white;padding:24px;border-radius:16px}.login-card h2{margin:0 0 8px}.login-card p{font-size:13px;color:#6b7280}.login-card input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;margin:8px 0 10px}.login-card button{width:100%;padding:12px;border:0;background:#111827;color:white;border-radius:10px}.hide{display:none!important}@media(max-width:1000px){.cards{grid-template-columns:repeat(3,1fr)}}@media(max-width:620px){.wrap{padding:15px}.top{align-items:flex-start;flex-direction:column}.cards{grid-template-columns:repeat(2,1fr)}.card .v{font-size:20px}}
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panel Agencia | Atribución</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1380px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:22px}.brand h1{font-size:22px;margin:0}.brand p{margin:5px 0 0;color:#6b7280;font-size:13px}.controls{display:flex;gap:8px;flex-wrap:wrap}.controls select,.controls button{border:1px solid #d1d5db;border-radius:10px;background:white;padding:10px 12px}.controls .primary{background:#111827;color:#fff;border-color:#111827}.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;box-shadow:0 1px 2px #0000000a}.k{font-size:12px;color:#6b7280;margin-bottom:8px}.v{font-size:24px;font-weight:750}.s{font-size:11px;color:#9ca3af;margin-top:5px}.section{background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-top:16px;overflow:hidden}.section-head{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid #e5e7eb}.section-head h2{font-size:15px;margin:0}.badge{font-size:11px;padding:5px 8px;border-radius:999px;background:#f3f4f6;color:#4b5563}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:11px 12px;border-bottom:1px solid #f3f4f6;text-align:left;white-space:nowrap}th{color:#6b7280;font-weight:600;background:#fafafa}.good{color:#166534}.warn{color:#92400e}.bad{color:#991b1b}.muted{color:#9ca3af}.btn{border:0;border-radius:8px;padding:7px 9px;font-size:11px;cursor:pointer}.btn-dark{background:#111827;color:white}.btn-light{background:#e5e7eb;color:#111827}.status{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}.pill{font-size:11px;padding:6px 9px;border-radius:999px;background:#fff;border:1px solid #e5e7eb}.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;background:#9ca3af}.on .dot{background:#16a34a}.error{padding:14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:10px;margin-bottom:14px;display:none}.login{position:fixed;inset:0;background:#111827e8;display:flex;align-items:center;justify-content:center;z-index:10}.login-card{width:min(420px,90vw);background:white;padding:24px;border-radius:16px}.login-card h2{margin:0 0 8px}.login-card p{font-size:13px;color:#6b7280}.login-card input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;margin:8px 0 10px}.login-card button{width:100%;padding:12px;border:0;background:#111827;color:white;border-radius:10px}.hide{display:none!important}@media(max-width:1050px){.cards{grid-template-columns:repeat(3,1fr)}}@media(max-width:680px){.wrap{padding:15px}.top{align-items:flex-start;flex-direction:column}.cards{grid-template-columns:repeat(2,1fr)}.v{font-size:20px}.controls{width:100%}.controls select{max-width:100%}}
+</style>
 </head>
 <body>
-<div id="login" class="login"><div class="login-card"><h2>Panel IndumentariaSinLimite</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña"><button id="loginBtn">Ingresar</button></div></div>
+<div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña"><button id="loginBtn">Ingresar</button></div></div>
 <div class="wrap">
-  <div id="error" class="error"></div>
-  <div class="top"><div class="brand"><h1>IndumentariaSinLimite — Atribución</h1><p>Meta Ads → WhatsApp → Venta real</p><div id="status" class="status"></div></div><div class="controls"><select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option></select><button id="refresh">Actualizar</button></div></div>
-  <div class="cards">
-    <div class="card"><div class="k">Gasto</div><div id="spend" class="v">—</div><div class="s">Meta Ads</div></div>
-    <div class="card"><div class="k">Conversaciones</div><div id="conversations" class="v">—</div><div id="attributed" class="s">—</div></div>
-    <div class="card"><div class="k">Ventas</div><div id="purchases" class="v">—</div><div id="close" class="s">—</div></div>
-    <div class="card"><div class="k">Facturación</div><div id="revenue" class="v">—</div><div class="s">ventas registradas</div></div>
-    <div class="card"><div class="k">CPA real</div><div id="cpa" class="v">—</div><div class="s">gasto / ventas</div></div>
-    <div class="card"><div class="k">ROAS real</div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
+<div id="error" class="error"></div>
+<div class="top">
+  <div class="brand"><h1>Meta Ads Sales Tracker</h1><p>Agencia → Cliente → WhatsApp → Venta real</p><div id="status" class="status"></div></div>
+  <div class="controls">
+    <select id="clientFilter"><option value="all">Todos los clientes</option></select>
+    <select id="days"><option value="7">7 días</option><option value="14">14 días</option><option value="30">30 días</option></select>
+    <button id="refresh">Actualizar</button>
+    <button id="addClient" class="primary">+ Agregar cliente</button>
   </div>
-
-  <div class="section"><div class="section-head"><h2>Rendimiento por anuncio</h2><span class="badge">Atribución CTWA</span></div><div class="table-wrap"><table><thead><tr><th>Campaña</th><th>Anuncio</th><th>Gasto</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
-
-  <div class="section"><div class="section-head"><h2>Conversaciones recientes</h2><span class="badge">Cerrar venta desde acá</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
+
+<div class="cards">
+<div class="card"><div class="k">Gasto</div><div id="spend" class="v">—</div><div class="s">Meta Ads</div></div>
+<div class="card"><div class="k">Conversaciones</div><div id="conversations" class="v">—</div><div id="attributed" class="s">—</div></div>
+<div class="card"><div class="k">Ventas</div><div id="purchases" class="v">—</div><div id="close" class="s">—</div></div>
+<div class="card"><div class="k">Facturación</div><div id="revenue" class="v">—</div><div class="s">ventas registradas</div></div>
+<div class="card"><div class="k">CPA real</div><div id="cpa" class="v">—</div><div class="s">gasto / ventas</div></div>
+<div class="card"><div class="k">ROAS real</div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
+</div>
+
+<div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
+
+<div class="section"><div class="section-head"><h2>Rendimiento por anuncio</h2><span class="badge">Atribución CTWA</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Campaña</th><th>Anuncio</th><th>Gasto</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
+
+<div class="section"><div class="section-head"><h2>Conversaciones recientes</h2><span class="badge">Cerrar venta desde acá</span></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+</div>
+
 <script>
-const $=id=>document.getElementById(id);let pwd=sessionStorage.getItem('isl_pwd')||'';const money=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n||0));const pct=n=>`${(Number(n||0)*100).toFixed(1)}%`;
-async function api(path,opts={}){const r=await fetch(path,{...opts,headers:{'Content-Type':'application/json','x-admin-password':pwd,...(opts.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){sessionStorage.removeItem('isl_pwd');$('login').classList.remove('hide');throw new Error('Contraseña incorrecta');}if(!r.ok)throw new Error(d.error||'Error');return d}
-function setStatus(c){$('status').innerHTML=[['Meta gasto',c.meta_insights],['Meta Purchase',c.meta_capi],['Mercado Pago',c.mercado_pago]].map(([x,on])=>`<span class="pill ${on?'on':''}"><span class="dot"></span>${x}</span>`).join('')}
-function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function load(){try{$('error').style.display='none';const d=await api(`/api/dashboard?days=${$('days').value}`);$('login').classList.add('hide');setStatus(d.configured);$('spend').textContent=money(d.totals.spend);$('conversations').textContent=d.totals.conversations;$('attributed').textContent=`${d.totals.attributed_conversations} atribuibles a anuncios`;$('purchases').textContent=d.totals.purchases;$('close').textContent=`Cierre ${pct(d.totals.close_rate)}`;$('revenue').textContent=money(d.totals.revenue);$('cpa').textContent=d.totals.purchases?money(d.totals.cpa):'—';$('roas').textContent=d.totals.spend?`${d.totals.roas.toFixed(2)}x`:'—';
-$('adsBody').innerHTML=d.by_ad.map(x=>`<tr><td>${esc(x.campaign||'—')}</td><td>${esc(x.ad||x.ad_id)}</td><td>${money(x.spend)}</td><td>${x.leads}</td><td>${x.purchases}</td><td>${money(x.revenue)}</td><td>${x.cpa==null?'—':money(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td><td>${x.close_rate==null?'—':pct(x.close_rate)}</td></tr>`).join('')||'<tr><td colspan="9" class="muted">Todavía no hay datos.</td></tr>';
-$('leadsBody').innerHTML=d.leads.map(l=>{const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0);const won=l.status==='won';return `<tr><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td><td>${l.ctwa_clid?'Meta Ads':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td><td class="${won?'good':''}">${won?'Venta':'Abierto'}</td><td>${s?money(s):'—'}</td><td>${won?'—':`<button class="btn btn-sale" onclick="sale('${l.id}')">Marcar venta</button> <button class="btn btn-link" onclick="pay('${l.id}')">Link MP</button>`}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">Todavía no entraron conversaciones.</td></tr>';
-}catch(e){$('error').textContent=e.message;$('error').style.display='block'}}
-window.sale=async id=>{const amount=prompt('Monto total de la venta (ARS):');if(!amount)return;const method=prompt('Medio: transferencia / efectivo / otro','transferencia')||'manual';try{await api('/api/sale',{method:'POST',body:JSON.stringify({leadId:id,amount:Number(amount),paymentMethod:method})});await load()}catch(e){alert(e.message)}}
-window.pay=async id=>{const amount=prompt('Monto a cobrar por Mercado Pago (ARS):');if(!amount)return;const desc=prompt('Descripción','Compra IndumentariaSinLimite')||'Compra IndumentariaSinLimite';try{const d=await api('/api/payment-link',{method:'POST',body:JSON.stringify({leadId:id,amount:Number(amount),description:desc})});await navigator.clipboard.writeText(d.url);alert('Link de Mercado Pago copiado al portapapeles:\n'+d.url)}catch(e){alert(e.message)}}
-$('loginBtn').onclick=()=>{pwd=$('password').value;sessionStorage.setItem('isl_pwd',pwd);load()};$('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});$('refresh').onclick=load;$('days').onchange=load;if(pwd)load();
+const $=id=>document.getElementById(id);
+let pwd=sessionStorage.getItem('agency_pwd')||'';
+let data=null;
+const money=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(Number(n||0));
+const pct=n=>`${(Number(n||0)*100).toFixed(1)}%`;
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path,opts={}){
+  const r=await fetch(path,{...opts,headers:{'Content-Type':'application/json','x-admin-password':pwd,...(opts.headers||{})}});
+  const d=await r.json().catch(()=>({}));
+  if(r.status===401){sessionStorage.removeItem('agency_pwd');$('login').classList.remove('hide');throw new Error('Contraseña incorrecta')}
+  if(!r.ok)throw new Error(d.error||'Error');
+  return d;
+}
+
+function setStatus(c){
+  $('status').innerHTML=[['Meta gasto',c.meta_insights],['Meta Purchase',c.meta_capi],['Mercado Pago',c.mercado_pago]]
+    .map(([x,on])=>`<span class="pill ${on?'on':''}"><span class="dot"></span>${x}</span>`).join('');
+}
+
+function renderClientFilter(clients){
+  const current=$('clientFilter').value||'all';
+  $('clientFilter').innerHTML='<option value="all">Todos los clientes</option>'+clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  if([...$('clientFilter').options].some(o=>o.value===current)) $('clientFilter').value=current;
+}
+
+function connectionText(c){
+  if(c.whatsapp_ready && c.meta_spend_ready && c.meta_purchase_ready) return '<span class="good">Completo</span>';
+  const missing=[];
+  if(!c.whatsapp_ready) missing.push('WhatsApp');
+  if(!c.meta_spend_ready) missing.push('Ads');
+  if(!c.meta_purchase_ready) missing.push('Purchase');
+  return `<span class="warn">Falta ${missing.join(' / ')}</span>`;
+}
+
+async function load(){
+  try{
+    $('error').style.display='none';
+    const client=$('clientFilter').value||'all';
+    data=await api(`/api/dashboard?days=${$('days').value}&client_id=${encodeURIComponent(client)}`);
+    $('login').classList.add('hide');
+    renderClientFilter(data.clients||[]);
+    setStatus(data.configured);
+    $('spend').textContent=money(data.totals.spend);
+    $('conversations').textContent=data.totals.conversations;
+    $('attributed').textContent=`${data.totals.attributed_conversations} atribuibles a anuncios`;
+    $('purchases').textContent=data.totals.purchases;
+    $('close').textContent=`Cierre ${pct(data.totals.close_rate)}`;
+    $('revenue').textContent=money(data.totals.revenue);
+    $('cpa').textContent=data.totals.purchases?money(data.totals.cpa):'—';
+    $('roas').textContent=data.totals.spend?`${data.totals.roas.toFixed(2)}x`:'—';
+
+    $('clientsBody').innerHTML=(data.by_client||[]).map(c=>`<tr>
+      <td><b>${esc(c.name)}</b></td>
+      <td>${esc(c.whatsapp_number||'—')}</td>
+      <td>${connectionText(c)}</td>
+      <td>${c.conversations}</td><td>${c.purchases}</td>
+      <td>${money(c.revenue)}</td><td>${money(c.spend)}</td>
+      <td>${c.cpa==null?'—':money(c.cpa)}</td>
+      <td class="${c.roas>=1?'good':'bad'}">${c.roas==null?'—':c.roas.toFixed(2)+'x'}</td>
+      <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button></td>
+    </tr>`).join('')||'<tr><td colspan="10" class="muted">No hay clientes activos.</td></tr>';
+
+    $('adsBody').innerHTML=(data.by_ad||[]).map(x=>`<tr>
+      <td>${esc(x.client_name||'—')}</td><td>${esc(x.campaign||'—')}</td><td>${esc(x.ad||x.ad_id)}</td>
+      <td>${money(x.spend)}</td><td>${x.leads}</td><td>${x.purchases}</td><td>${money(x.revenue)}</td>
+      <td>${x.cpa==null?'—':money(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td>
+      <td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
+    </tr>`).join('')||'<tr><td colspan="10" class="muted">Todavía no hay datos de anuncios.</td></tr>';
+
+    $('leadsBody').innerHTML=(data.leads||[]).map(l=>{
+      const s=(l.sales||[]).reduce((a,x)=>a+Number(x.amount||0),0), won=l.status==='won';
+      return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
+      <td>${l.ctwa_clid?'Meta Ads':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
+      <td class="${won?'good':''}">${won?'Venta':'Abierto'}</td><td>${s?money(s):'—'}</td>
+      <td>${won?'—':`<button class="btn btn-dark" onclick="sale('${l.id}')">Marcar venta</button> <button class="btn btn-light" onclick="pay('${l.id}')">Link MP</button>`}</td></tr>`
+    }).join('')||'<tr><td colspan="8" class="muted">Todavía no entraron conversaciones.</td></tr>';
+  }catch(e){$('error').textContent=e.message;$('error').style.display='block'}
+}
+
+window.viewClient=id=>{$('clientFilter').value=id;load()};
+
+window.editClient=async id=>{
+  const c=(data?.clients||[]).find(x=>x.id===id); if(!c)return;
+  const whatsapp=prompt('Número de WhatsApp del negocio',c.whatsapp_number||''); if(whatsapp===null)return;
+  const waba=prompt('WABA ID',c.waba_id||''); if(waba===null)return;
+  const phoneId=prompt('Phone Number ID de WhatsApp',c.phone_number_id||''); if(phoneId===null)return;
+  const ad=prompt('Cuenta publicitaria (act_...)',c.ad_account_id||''); if(ad===null)return;
+  const dataset=prompt('Dataset ID para Purchase CAPI',c.dataset_id||''); if(dataset===null)return;
+  try{
+    await api('/api/clients',{method:'PATCH',body:JSON.stringify({id,whatsapp_number:whatsapp,waba_id:waba,phone_number_id:phoneId,ad_account_id:ad,dataset_id:dataset})});
+    await load();
+  }catch(e){alert(e.message)}
+};
+
+window.addClient=async()=>{
+  const name=prompt('Nombre del nuevo cliente'); if(!name)return;
+  const whatsapp=prompt('Número de WhatsApp (podés dejarlo vacío y configurarlo después)','');
+  try{
+    const r=await api('/api/clients',{method:'POST',body:JSON.stringify({name,whatsapp_number:whatsapp||null})});
+    $('clientFilter').value=r.client.id;
+    await load();
+    if(confirm('Cliente creado. ¿Querés cargar ahora los IDs de Meta y WhatsApp?')) editClient(r.client.id);
+  }catch(e){alert(e.message)}
+};
+
+window.sale=async id=>{
+  const amount=prompt('Monto total de la venta (ARS):');if(!amount)return;
+  const method=prompt('Medio: transferencia / efectivo / otro','transferencia')||'manual';
+  try{await api('/api/sale',{method:'POST',body:JSON.stringify({leadId:id,amount:Number(amount),paymentMethod:method})});await load()}catch(e){alert(e.message)}
+};
+
+window.pay=async id=>{
+  const amount=prompt('Monto a cobrar por Mercado Pago (ARS):');if(!amount)return;
+  const desc=prompt('Descripción','Compra')||'Compra';
+  try{
+    const d=await api('/api/payment-link',{method:'POST',body:JSON.stringify({leadId:id,amount:Number(amount),description:desc})});
+    await navigator.clipboard.writeText(d.url);alert('Link de Mercado Pago copiado:\n'+d.url)
+  }catch(e){alert(e.message)}
+};
+
+$('loginBtn').onclick=()=>{pwd=$('password').value;sessionStorage.setItem('agency_pwd',pwd);load()};
+$('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
+$('refresh').onclick=load;$('days').onchange=load;$('clientFilter').onchange=load;$('addClient').onclick=window.addClient;
+if(pwd)load();
 </script>
 </body></html>
