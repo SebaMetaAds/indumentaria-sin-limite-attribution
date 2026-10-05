@@ -369,9 +369,12 @@ window.addClient=async()=>{
 };
 
 window.sale=async id=>{
-  const amount=prompt('Monto total de la venta (ARS):');if(!amount)return;
-  const method=prompt('Medio: transferencia / efectivo / otro','transferencia')||'manual';
-  try{await api('/api/sale',{method:'POST',body:JSON.stringify({leadId:id,amount:Number(amount),paymentMethod:method})});await load()}catch(e){alert(e.message)}
+  if(!confirm('¿Confirmás que este chat terminó en venta?'))return;
+  try{
+    await api('/api/sale',{method:'POST',body:JSON.stringify({leadId:id})});
+    showToast('Chat marcado como venta');
+    await load();
+  }catch(e){alert(e.message)}
 };
 
 window.pay=async id=>{
