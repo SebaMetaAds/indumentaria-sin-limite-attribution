@@ -116,7 +116,7 @@ async function load(){
       <td><div class="entity-main">${esc(x.ad||'—')}</div><div class="entity-id">${esc(x.ad_id||'Sin ID')}</div></td>
       <td class="spend-cell">${moneyExact(x.spend)}</td>
       <td>${x.leads}</td>
-      <td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}',${JSON.stringify(String(x.ad||'Anuncio'))})">Ver mensajes</button></td>
+      <td><button class="btn btn-light" onclick="openMessages('${x.client_id}','${x.ad_id}','${encodeURIComponent(String(x.ad||'Anuncio'))}')">Ver mensajes</button></td>
       <td>${x.purchases}</td><td>${money(x.revenue)}</td>
       <td>${x.cpa==null?'—':moneyExact(x.cpa)}</td><td class="${x.roas>=1?'good':'bad'}">${x.roas==null?'—':x.roas.toFixed(2)+'x'}</td>
       <td>${x.close_rate==null?'—':pct(x.close_rate)}</td>
@@ -134,6 +134,7 @@ async function load(){
 
 window.closeMessages=()=>{$('messagesModal').classList.add('hide')};
 window.openMessages=async(clientId,adId,adName)=>{
+  adName=decodeURIComponent(adName||'Anuncio');
   $('messagesTitle').textContent='Mensajes — '+adName;
   $('messagesBody').innerHTML='<div class="empty-state">Cargando mensajes…</div>';
   $('messagesModal').classList.remove('hide');
