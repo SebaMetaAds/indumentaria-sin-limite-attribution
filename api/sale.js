@@ -8,6 +8,30 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return sendJson(res, 405, { error: 'Método no permitido' });
   try {
     const body = readJsonBody(req);
+
+    if (body.action === 'update') {
+      if (!body.saleId) throw new Error('saleId requerido');
+      const amount = Number(body.amount);
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Monto inválido');
+      const payload = { amount };
+      if (body.paymentMethod) payload.payment_method = body.paymentMethod;
+      if (body.currency) payload.currency = body.currency;
+      if (body.soldAt) payload.sold_at = new Date(body.soldAt).toISOString();
+      const rows = await patch('sales', { id: `eq.${body.saleId}` }, payload);
+      if (body.leadId && body.paymentCheckStatus === 'paid') {
+        await patch('leads', { id: `eq.${body.leadId}` }, {
+          payment_check_status: 'paid',
+          payment_checked_at: new Date().toISOString(),
+          status: 'won',
+          pipeline_stage: 'won',
+          pipeline_updated_at: new Date().toISOString(),
+          follow_up_at: null,
+          updated_at: new Date().toISOString()
+        });
+      }
+      return sendJson(res, 200, { sale: rows?.[0] || null, updated: true });
+    }
+
     if (!body.leadId) throw new Error('leadId requerido');
 
     const hasAmount = body.amount !== undefined && body.amount !== null && String(body.amount).trim() !== '';
@@ -29,8 +53,18 @@ export default async function handler(req, res) {
       leadId: body.leadId,
       amount: body.amount,
       currency: body.currency || null,
-      paymentMethod: body.paymentMethod || 'manual'
+      paymentMethod: body.paymentMethod || 'manual',
+      soldAt: body.soldAt ? new Date(body.soldAt).toISOString() : new Date().toISOString()
     });
+
+    if (body.paymentCheckStatus === 'paid') {
+      await patch('leads', { id: `eq.${body.leadId}` }, {
+        payment_check_status: 'paid',
+        payment_checked_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
+
     return sendJson(res, 200, result);
   } catch (error) {
     return sendJson(res, 400, { error: error.message });
