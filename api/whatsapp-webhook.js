@@ -2,6 +2,7 @@ import { sendJson, readJsonBody } from '../lib/http.js';
 import { extractMessages } from '../lib/whatsapp.js';
 import { captureInboundMessage } from '../lib/leads.js';
 import { recordInboundMessage } from '../lib/messages.js';
+import { processHistoryWebhook, processMessageEchoes, processStateSync } from '../lib/coexistence.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -23,6 +24,24 @@ export default async function handler(req, res) {
     const messages = extractMessages(body);
     const captured = [];
     const errors = [];
+    const coexistence = [];
+
+    for (const entry of body?.entry || []) {
+      for (const change of entry?.changes || []) {
+        try {
+          if (change?.field === 'history') {
+            coexistence.push({ field: 'history', ...(await processHistoryWebhook(entry, change.value || {})) });
+          } else if (change?.field === 'smb_message_echoes') {
+            coexistence.push({ field: 'smb_message_echoes', ...(await processMessageEchoes(entry, change.value || {})) });
+          } else if (change?.field === 'smb_app_state_sync') {
+            coexistence.push({ field: 'smb_app_state_sync', ...(await processStateSync(entry, change.value || {})) });
+          }
+        } catch (error) {
+          console.error('whatsapp coexistence capture', { field: change?.field, error: error.message });
+          errors.push({ field: change?.field || null, error: error.message });
+        }
+      }
+    }
 
     for (const msg of messages) {
       if (!msg.phone) continue;
@@ -50,6 +69,7 @@ export default async function handler(req, res) {
       ok: true,
       messages: messages.length,
       captured: captured.length,
+      coexistence,
       errors: errors.length
     });
   } catch (error) {
