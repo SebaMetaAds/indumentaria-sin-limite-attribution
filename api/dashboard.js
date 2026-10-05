@@ -252,19 +252,21 @@ export default async function handler(req, res) {
     for (const l of leads || []) {
       const owner = String(l.assigned_to || '').trim();
       if (!owner) continue;
-      if (!sellerMap.has(owner)) sellerMap.set(owner, { name:owner, chats:0, won:0, lost:0, open:0, followups_due:0 });
+      if (!sellerMap.has(owner)) sellerMap.set(owner, { name:owner, chats:0, won:0, lost:0, open:0, followups_due:0, revenue:0 });
       const s = sellerMap.get(owner);
       s.chats += 1;
       const stage = l.pipeline_stage || (l.status === 'won' ? 'won' : l.status === 'lost' ? 'lost' : 'new');
       if (stage === 'won') s.won += 1;
       else if (stage === 'lost') s.lost += 1;
       else s.open += 1;
+      for (const sale of salesByLead.get(l.id) || []) s.revenue += n(sale.amount);
       if (l.follow_up_at && !['won','lost'].includes(stage) && arDate(l.follow_up_at) <= today) s.followups_due += 1;
     }
     const sellerStats = [...sellerMap.values()].map(s => ({
       ...s,
-      close_rate: s.chats ? s.won / s.chats : 0
-    })).sort((a,b) => b.won - a.won || b.close_rate - a.close_rate || b.chats - a.chats);
+      close_rate: s.chats ? s.won / s.chats : 0,
+      average_ticket: s.won ? s.revenue / s.won : 0
+    })).sort((a,b) => b.revenue - a.revenue || b.won - a.won || b.close_rate - a.close_rate || b.chats - a.chats);
 
     const lossMap = new Map();
     for (const l of leads || []) {
@@ -279,7 +281,8 @@ export default async function handler(req, res) {
 
     const paymentQueue = (aliasPaymentLeads || []).map(l => ({
       ...l,
-      client_name: clientById.get(l.client_id)?.name || 'Cliente'
+      client_name: clientById.get(l.client_id)?.name || 'Cliente',
+      sales: salesByLead.get(l.id) || []
     }));
     const pendingPayments = paymentQueue.filter(l => l.payment_check_status === 'pending');
 
