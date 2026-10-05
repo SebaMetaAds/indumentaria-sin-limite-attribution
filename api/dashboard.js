@@ -96,6 +96,9 @@ export default async function handler(req, res) {
     const previousMonthStart = prevMonthStart(today);
     const dayOfMonth = Number(today.slice(8,10));
     const daysInMonth = daysBetween(monthStart,currentMonthNext);
+    const daysInPreviousMonth = daysBetween(previousMonthStart,monthStart);
+    const comparablePreviousDays = Math.min(dayOfMonth, daysInPreviousMonth);
+    const comparablePreviousCutoff = shiftDate(previousMonthStart, comparablePreviousDays);
     let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
     let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
     let taskQuery = 'select=*&status=eq.open&order=due_at.asc.nullslast,created_at.desc&limit=1000';
@@ -350,8 +353,11 @@ export default async function handler(req, res) {
     const yesterdayRevenue=yesterdaySales.reduce((a,s)=>a+n(s.amount),0);
     const monthRevenue=(currentMonthSales||[]).reduce((a,s)=>a+n(s.amount),0);
     const previousMonthRevenue=(previousMonthSales||[]).reduce((a,s)=>a+n(s.amount),0);
+    const previousMonthComparable=(previousMonthSales||[]).filter(s=>arDate(s.sold_at)<comparablePreviousCutoff);
+    const previousMonthComparableRevenue=previousMonthComparable.reduce((a,s)=>a+n(s.amount),0);
     const monthSalesCount=(currentMonthSales||[]).length;
     const previousMonthSalesCount=(previousMonthSales||[]).length;
+    const previousMonthComparableSales=previousMonthComparable.length;
     const monthlyGoal=selectedClients.reduce((a,client)=>a+n(client.monthly_revenue_goal),0);
     const projectedMonthRevenue=dayOfMonth ? (monthRevenue/dayOfMonth)*daysInMonth : monthRevenue;
     const goalProgress=monthlyGoal ? monthRevenue/monthlyGoal : null;
@@ -446,8 +452,10 @@ export default async function handler(req, res) {
         month_revenue:monthRevenue,
         previous_month_sales:previousMonthSalesCount,
         previous_month_revenue:previousMonthRevenue,
-        month_revenue_delta:deltaPct(monthRevenue,previousMonthRevenue),
-        month_sales_delta:deltaPct(monthSalesCount,previousMonthSalesCount),
+        month_revenue_delta:deltaPct(monthRevenue,previousMonthComparableRevenue),
+        month_sales_delta:deltaPct(monthSalesCount,previousMonthComparableSales),
+        previous_month_mtd_revenue:previousMonthComparableRevenue,
+        previous_month_mtd_sales:previousMonthComparableSales,
         monthly_goal:monthlyGoal,
         goal_progress:goalProgress,
         projected_month_revenue:projectedMonthRevenue,
