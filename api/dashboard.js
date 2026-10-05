@@ -16,6 +16,28 @@ function daysBetween(a, b) {
   const y = new Date(b + 'T12:00:00Z');
   return Math.round((y - x) / 86400000);
 }
+function shiftDate(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0,10);
+}
+function monthStartOf(dateStr) { return dateStr.slice(0,8) + '01'; }
+function nextMonthStart(dateStr) {
+  const d = new Date(dateStr.slice(0,7) + '-15T12:00:00Z');
+  d.setUTCMonth(d.getUTCMonth() + 1, 1);
+  return d.toISOString().slice(0,10);
+}
+function prevMonthStart(dateStr) {
+  const d = new Date(dateStr.slice(0,7) + '-15T12:00:00Z');
+  d.setUTCMonth(d.getUTCMonth() - 1, 1);
+  return d.toISOString().slice(0,10);
+}
+function arMidnightUtc(dateStr) { return dateStr + 'T03:00:00.000Z'; }
+function deltaPct(current, previous) {
+  current=n(current); previous=n(previous);
+  if (!previous) return current ? null : 0;
+  return (current - previous) / previous;
+}
 
 function rangeQuery(column, since, until, clientId) {
   let q = `select=*&${column}=gte.${enc(since)}&${column}=lte.${enc(until)}&order=${column}.desc&limit=2000`;
@@ -67,19 +89,29 @@ export default async function handler(req, res) {
     const publicClients = clients.map(c => ({ ...c, meta_token_configured: Boolean(tokenStatuses.get(c.id)) }));
 
     const today = arDate();
-    const monthStart = today.slice(0, 8) + '01';
+    const monthStart = monthStartOf(today);
+    const tomorrow = shiftDate(today,1);
+    const yesterday = shiftDate(today,-1);
+    const currentMonthNext = nextMonthStart(today);
+    const previousMonthStart = prevMonthStart(today);
+    const dayOfMonth = Number(today.slice(8,10));
+    const daysInMonth = daysBetween(monthStart,currentMonthNext);
     let paymentQuery = `select=*&paid_at=gte.${enc(monthStart + 'T00:00:00.000Z')}&order=paid_at.desc&limit=2000`;
     let followUpQuery = 'select=*&follow_up_at=not.is.null&order=follow_up_at.asc&limit=2000';
     let taskQuery = 'select=*&status=eq.open&order=due_at.asc.nullslast,created_at.desc&limit=1000';
     let aliasPaymentQuery = 'select=*&payment_signal_detected_at=not.is.null&order=payment_signal_detected_at.desc&limit=2000';
+    let currentMonthSalesQuery = `select=*&sold_at=gte.${enc(arMidnightUtc(monthStart))}&sold_at=lt.${enc(arMidnightUtc(currentMonthNext))}&order=sold_at.desc&limit=5000`;
+    let previousMonthSalesQuery = `select=*&sold_at=gte.${enc(arMidnightUtc(previousMonthStart))}&sold_at=lt.${enc(arMidnightUtc(monthStart))}&order=sold_at.desc&limit=5000`;
     if (requestedClientId) {
       paymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
       followUpQuery += `&client_id=eq.${enc(requestedClientId)}`;
       taskQuery += `&client_id=eq.${enc(requestedClientId)}`;
       aliasPaymentQuery += `&client_id=eq.${enc(requestedClientId)}`;
+      currentMonthSalesQuery += `&client_id=eq.${enc(requestedClientId)}`;
+      previousMonthSalesQuery += `&client_id=eq.${enc(requestedClientId)}`;
     }
 
-    const [leads, sales, insightGroups, servicePayments, followUpLeads, agencyTasks, aliasPaymentLeads] = await Promise.all([
+    const [leads, sales, insightGroups, servicePayments, followUpLeads, agencyTasks, aliasPaymentLeads, currentMonthSales, previousMonthSales] = await Promise.all([
       select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
       select('sales', rangeQuery('sold_at', since, until, requestedClientId)),
       Promise.all(selectedClients.map(async client => {
@@ -89,7 +121,9 @@ export default async function handler(req, res) {
       select('client_service_payments', paymentQuery),
       select('leads', followUpQuery),
       select('agency_tasks', taskQuery),
-      select('leads', aliasPaymentQuery)
+      select('leads', aliasPaymentQuery),
+      select('sales', currentMonthSalesQuery),
+      select('sales', previousMonthSalesQuery)
     ]);
 
     const insights = insightGroups.flat();
@@ -177,6 +211,7 @@ export default async function handler(req, res) {
         website_url: client.website_url || null,
         instagram_handle: client.instagram_handle || null,
         monthly_ad_budget: client.monthly_ad_budget == null ? null : Number(client.monthly_ad_budget),
+        monthly_revenue_goal: client.monthly_revenue_goal == null ? null : Number(client.monthly_revenue_goal),
         business_goal: client.business_goal || null,
         internal_notes: client.internal_notes || null,
         primary_contact_name: client.primary_contact_name || null,
@@ -309,8 +344,18 @@ export default async function handler(req, res) {
       }))
       .sort((a,b) => b.score - a.score);
 
-    const todaySales=(sales||[]).filter(s=>arDate(s.sold_at)===today);
+    const todaySales=(currentMonthSales||[]).filter(s=>arDate(s.sold_at)===today);
+    const yesterdaySales=(currentMonthSales||[]).filter(s=>arDate(s.sold_at)===yesterday);
     const todayRevenue=todaySales.reduce((a,s)=>a+n(s.amount),0);
+    const yesterdayRevenue=yesterdaySales.reduce((a,s)=>a+n(s.amount),0);
+    const monthRevenue=(currentMonthSales||[]).reduce((a,s)=>a+n(s.amount),0);
+    const previousMonthRevenue=(previousMonthSales||[]).reduce((a,s)=>a+n(s.amount),0);
+    const monthSalesCount=(currentMonthSales||[]).length;
+    const previousMonthSalesCount=(previousMonthSales||[]).length;
+    const monthlyGoal=selectedClients.reduce((a,client)=>a+n(client.monthly_revenue_goal),0);
+    const projectedMonthRevenue=dayOfMonth ? (monthRevenue/dayOfMonth)*daysInMonth : monthRevenue;
+    const goalProgress=monthlyGoal ? monthRevenue/monthlyGoal : null;
+    const projectedGoalProgress=monthlyGoal ? projectedMonthRevenue/monthlyGoal : null;
     const byPaymentMethod=new Map();
     for(const s of sales||[]){
       const key=String(s.payment_method||'otro');
@@ -328,6 +373,23 @@ export default async function handler(req, res) {
         client_name:clientById.get(s.client_id)?.name||'Cliente',
         assigned_to:l?.assigned_to||null,ad_name:l?.meta_ad_name||l?.referral_headline||null};
     });
+
+    const revenueAdRanking=rows
+      .filter(r=>n(r.revenue)>0)
+      .sort((a,b)=>n(b.revenue)-n(a.revenue) || n(b.purchases)-n(a.purchases))
+      .slice(0,20)
+      .map((r,index)=>({
+        rank:index+1,
+        client_id:r.client_id,
+        client_name:r.client_name,
+        campaign:r.campaign,
+        ad:r.ad,
+        spend:r.spend,
+        sales:r.purchases,
+        revenue:r.revenue,
+        roas:r.roas,
+        average_ticket:r.purchases ? r.revenue/r.purchases : 0
+      }));
 
     const adAlerts = [];
     for (const row of rows) {
@@ -376,10 +438,27 @@ export default async function handler(req, res) {
         average_ticket:(sales||[]).length?revenue/(sales||[]).length:0,
         today_sales:todaySales.length,
         today_revenue:todayRevenue,
+        yesterday_sales:yesterdaySales.length,
+        yesterday_revenue:yesterdayRevenue,
+        today_revenue_delta:deltaPct(todayRevenue,yesterdayRevenue),
+        today_sales_delta:deltaPct(todaySales.length,yesterdaySales.length),
+        month_sales:monthSalesCount,
+        month_revenue:monthRevenue,
+        previous_month_sales:previousMonthSalesCount,
+        previous_month_revenue:previousMonthRevenue,
+        month_revenue_delta:deltaPct(monthRevenue,previousMonthRevenue),
+        month_sales_delta:deltaPct(monthSalesCount,previousMonthSalesCount),
+        monthly_goal:monthlyGoal,
+        goal_progress:goalProgress,
+        projected_month_revenue:projectedMonthRevenue,
+        projected_goal_progress:projectedGoalProgress,
+        month_elapsed_days:dayOfMonth,
+        month_total_days:daysInMonth,
         unpriced_sales:unpricedSales,
         payments_pending:pendingPayments.length,
         by_payment_method:[...byPaymentMethod.values()].sort((a,b)=>b.revenue-a.revenue),
         by_client:salesByClient,
+        by_ad_revenue:revenueAdRanking,
         recent_sales:recentSales
       },
       agency_finance: {
