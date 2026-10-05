@@ -413,6 +413,7 @@ const signalLabels={
   alias:'ALIAS',
   sena:'Seña',
   te_transferi:'Te transferí',
+  te_transfiero:'Te transfiero',
   ya_pague:'Ya pagué',
   comprobante:'Comprobante',
   transferencia_realizada:'Transferencia realizada',
@@ -999,7 +1000,14 @@ function renderMessageBubble(m){
     const labels={image:'[imagen]',sticker:'[sticker]',audio:'[audio no disponible]',video:'[video no disponible]',document:'[documento no disponible]'};
     media='<div class="media-fallback">'+labels[m.message_type]+'</div>';
   }
-  if(m.payment_proof_candidate) media+='<div class="proof-badge">Posible comprobante · '+esc(m.payment_proof_reason||'verificar')+'</div>';
+  if(m.payment_proof_candidate){
+    let proofText='Posible comprobante · '+esc(m.payment_proof_reason||'verificar');
+    if(m.auto_sale_status==='created') proofText='Venta automática creada · '+money(m.auto_sale_amount||0);
+    else if(m.auto_sale_status==='needs_total') proofText='Comprobante detectado · falta un total claro';
+    else if(m.auto_sale_status==='skipped'&&m.auto_sale_amount) proofText='Comprobante detectado · venta ya registrada ('+money(m.auto_sale_amount)+')';
+    else if(m.payment_proof_confidence==='high') proofText='Comprobante detectado · alta confianza';
+    media+='<div class="proof-badge">'+proofText+'</div>';
+  }
 
   const fallback=m.message_type==='interactive'?'Contenido interactivo de WhatsApp':m.message_type==='reaction'?'Reacción de WhatsApp':'['+esc(m.message_type||'mensaje')+']';
   const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">'+fallback+'</div>':'');
