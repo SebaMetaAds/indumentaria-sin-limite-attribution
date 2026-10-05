@@ -1,6 +1,7 @@
 import { sendJson, readJsonBody } from '../lib/http.js';
 import { extractMessages } from '../lib/whatsapp.js';
 import { captureInboundMessage } from '../lib/leads.js';
+import { recordInboundMessage } from '../lib/messages.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -27,7 +28,10 @@ export default async function handler(req, res) {
       if (!msg.phone) continue;
       try {
         const lead = await captureInboundMessage(msg);
-        if (lead) captured.push(lead.id);
+        if (lead) {
+          await recordInboundMessage(msg, lead);
+          captured.push(lead.id);
+        }
       } catch (error) {
         console.error('whatsapp message capture', {
           waba_id: msg.waba_id,
