@@ -37,11 +37,36 @@ export default async function handler(req, res) {
     const media = await fetchWhatsAppMedia(message.media_id, client);
     const mime = media.mimeType || message.media_mime_type || 'application/octet-stream';
     const filename = message.media_filename || 'whatsapp-media';
+    const safeFilename = String(filename).replace(/[\r\n"\\]/g, '');
+    const disposition = req.query?.download === '1' ? 'attachment' : 'inline';
+    const total = media.buffer.length;
+    const range = req.headers.range;
 
-    res.status(200);
     res.setHeader('Content-Type', mime);
     res.setHeader('Cache-Control', 'private, max-age=300');
-    res.setHeader('Content-Disposition', `inline; filename="${String(filename).replace(/["\\]/g, '')}"`);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Disposition', `${disposition}; filename="${safeFilename}"`);
+
+    if (range && /^bytes=\d*-\d*$/.test(range)) {
+      const [rawStart, rawEnd] = range.replace('bytes=', '').split('-');
+      const start = rawStart === '' ? 0 : Number(rawStart);
+      const end = rawEnd === '' ? total - 1 : Math.min(Number(rawEnd), total - 1);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || start >= total) {
+        res.status(416);
+        res.setHeader('Content-Range', `bytes */${total}`);
+        res.end();
+        return;
+      }
+      const chunk = media.buffer.subarray(start, end + 1);
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${total}`);
+      res.setHeader('Content-Length', String(chunk.length));
+      res.end(chunk);
+      return;
+    }
+
+    res.status(200);
+    res.setHeader('Content-Length', String(total));
     res.end(media.buffer);
   } catch (error) {
     console.error('media proxy', error);
