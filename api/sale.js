@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     const result = await createSale({
       leadId: body.leadId,
       amount: body.amount,
-      currency: body.currency || 'ARS',
+      currency: body.currency || null,
       paymentMethod: body.paymentMethod || 'manual'
     });
     return sendJson(res, 200, result);
