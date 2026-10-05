@@ -1,6 +1,7 @@
 import { sendJson, requireAdmin } from '../lib/http.js';
 import { insert, patch, select } from '../lib/supabase.js';
 import { agencyWhatsAppConfigured, sendRenewalReminder } from '../lib/agency-whatsapp.js';
+import { analyzeConversation } from '../lib/ai-analysis.js';
 
 function enc(v){return encodeURIComponent(v);}
 
@@ -82,7 +83,57 @@ export default async function handler(req,res){
       }
     }
 
-    return sendJson(res,200,{ok:true,date:today,sender_configured:configured,results});
+    const cutoff=Date.now()-(14*86400000);
+    const openLeads=await select('leads','select=*&status=eq.open&order=last_message_at.desc&limit=40');
+    const aiCandidates=(openLeads||[])
+      .filter(lead=>{
+        const last=lead.last_message_at ? new Date(lead.last_message_at).getTime() : 0;
+        const analyzed=lead.ai_analyzed_at ? new Date(lead.ai_analyzed_at).getTime() : 0;
+        return last>=cutoff && (!analyzed || analyzed<last);
+      })
+      .slice(0,8);
+
+    const aiResults=await Promise.all(aiCandidates.map(async lead=>{
+      try{
+        const messages=await select('messages',
+          `select=direction,message_type,message_text,received_at&lead_id=eq.${enc(lead.id)}&order=received_at.asc&limit=300`);
+        const textCount=(messages||[]).filter(m=>m.message_text&&String(m.message_text).trim()).length;
+        if(textCount<3) return {lead_id:lead.id,status:'skipped',reason:'Poco texto'};
+
+        const analysis=await analyzeConversation({lead,messages});
+        const now=new Date().toISOString();
+        await patch('leads',{id:`eq.${lead.id}`},{
+          ai_summary:analysis.summary,
+          ai_intent:analysis.intent,
+          ai_score:analysis.score,
+          ai_products:analysis.products,
+          ai_objections:analysis.objections,
+          ai_next_action:analysis.next_action,
+          ai_sentiment:analysis.sentiment,
+          ai_requires_attention:analysis.requires_attention,
+          ai_analyzed_at:now,
+          ai_model:analysis.model,
+          ai_message_count:analysis.message_count,
+          updated_at:now
+        });
+        return {lead_id:lead.id,status:'analyzed',score:analysis.score,intent:analysis.intent};
+      }catch(error){
+        console.error('daily ai analysis',{lead_id:lead.id,error:error.message});
+        return {lead_id:lead.id,status:'error',error:error.message};
+      }
+    }));
+
+    return sendJson(res,200,{
+      ok:true,
+      date:today,
+      sender_configured:configured,
+      results,
+      ai_analysis:{
+        candidates:aiCandidates.length,
+        analyzed:aiResults.filter(x=>x.status==='analyzed').length,
+        results:aiResults
+      }
+    });
   }catch(error){
     console.error('service-reminders',error);
     return sendJson(res,500,{error:error.message});
