@@ -37,6 +37,19 @@ export default async function handler(req,res){
     if(Object.prototype.hasOwnProperty.call(body,'follow_up_note')) payload.follow_up_note=body.follow_up_note||null;
     if(Object.prototype.hasOwnProperty.call(body,'loss_reason')) payload.loss_reason=body.loss_reason||null;
     if(Object.prototype.hasOwnProperty.call(body,'assigned_to')) payload.assigned_to=body.assigned_to||null;
+    if(Object.prototype.hasOwnProperty.call(body,'payment_check_status')){
+      const paymentStatus=body.payment_check_status;
+      if(!['pending','paid','not_paid'].includes(paymentStatus)) return sendJson(res,400,{error:'Estado de pago inválido'});
+      payload.payment_check_status=paymentStatus;
+      payload.payment_checked_at=paymentStatus==='pending' ? null : new Date().toISOString();
+      if(Object.prototype.hasOwnProperty.call(body,'payment_check_note')) payload.payment_check_note=body.payment_check_note||null;
+      if(paymentStatus==='paid'){
+        payload.status='won';
+        payload.pipeline_stage='won';
+        payload.pipeline_updated_at=new Date().toISOString();
+        payload.follow_up_at=null;
+      }
+    }
 
     const updated=await patch('leads',{id:`eq.${id}`},payload);
     return sendJson(res,200,{lead:updated?.[0]||lead});
