@@ -1,7 +1,7 @@
 import { sendJson, requireAdmin, isoRange } from '../lib/http.js';
-import { select } from '../lib/supabase.js';
+import { patch, select } from '../lib/supabase.js';
 import { listClients } from '../lib/clients.js';
-import { clientMetaConfig, getAdInsights, hasMetaToken } from '../lib/meta.js';
+import { clientMetaConfig, ensureWabaWebhookSubscription, getAdInsights, hasMetaToken } from '../lib/meta.js';
 
 function enc(v) { return encodeURIComponent(v); }
 function n(v) { return Number(v || 0); }
@@ -29,6 +29,30 @@ export default async function handler(req, res) {
     }
 
     const tokenStatuses = new Map(await Promise.all(clients.map(async c => [c.id, await hasMetaToken(c)])));
+
+    await Promise.all(selectedClients.map(async client => {
+      const tokenReady = Boolean(tokenStatuses.get(client.id));
+      if (!tokenReady || !client.waba_id || client.webhook_subscribed_at) return;
+      try {
+        await ensureWabaWebhookSubscription(client);
+        const now = new Date().toISOString();
+        client.webhook_subscribed_at = now;
+        client.webhook_subscription_error = null;
+        await patch('clients', { id: `eq.${client.id}` }, {
+          webhook_subscribed_at: now,
+          webhook_subscription_error: null,
+          updated_at: now
+        });
+      } catch (e) {
+        client.webhook_subscription_error = e.message;
+        await patch('clients', { id: `eq.${client.id}` }, {
+          webhook_subscription_error: e.message,
+          updated_at: new Date().toISOString()
+        }).catch(() => {});
+        console.error('waba webhook subscription', { client_id: client.id, error: e.message });
+      }
+    }));
+
     const publicClients = clients.map(c => ({ ...c, meta_token_configured: Boolean(tokenStatuses.get(c.id)) }));
 
     const [leads, sales, insightGroups] = await Promise.all([
@@ -114,6 +138,8 @@ export default async function handler(req, res) {
         roas: cSpend ? cRevenue / cSpend : null,
         close_rate: cLeads.length ? cBuyers.size / cLeads.length : null,
         whatsapp_ready: Boolean(client.waba_id && client.phone_number_id),
+        webhook_ready: Boolean(client.webhook_subscribed_at),
+        webhook_subscription_error: client.webhook_subscription_error || null,
         meta_spend_ready: Boolean(config.adAccountId && tokenReady),
         meta_purchase_ready: Boolean(config.datasetId && config.wabaId && tokenReady)
       };
