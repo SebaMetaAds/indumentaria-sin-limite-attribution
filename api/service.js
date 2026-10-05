@@ -41,27 +41,42 @@ export default async function handler(req,res){
 
     const body=readJsonBody(req);
     const clientId=body.client_id || body.clientId;
-    if(!clientId) return sendJson(res,400,{error:'client_id requerido'});
 
+    if(req.method==='PATCH' && body.action==='task_update'){
+      if(!body.task_id) return sendJson(res,400,{error:'task_id requerido'});
+      const taskPayload={updated_at:new Date().toISOString()};
+      for(const key of ['title','description','assigned_to','priority','status']){
+        if(Object.prototype.hasOwnProperty.call(body,key)) taskPayload[key]=body[key]||null;
+      }
+      if(Object.prototype.hasOwnProperty.call(body,'client_id')) taskPayload.client_id=body.client_id||null;
+      if(Object.prototype.hasOwnProperty.call(body,'due_at')){
+        taskPayload.due_at=body.due_at ? new Date(body.due_at).toISOString() : null;
+      }
+      if(body.status==='done') taskPayload.completed_at=new Date().toISOString();
+      if(body.status==='open') taskPayload.completed_at=null;
+      const taskRows=await patch('agency_tasks',{id:`eq.${body.task_id}`},taskPayload);
+      return sendJson(res,200,{task:taskRows?.[0]||null});
+    }
+
+    if(req.method==='POST' && body.action==='task_create'){
+      if(!body.title?.trim()) return sendJson(res,400,{error:'Título requerido'});
+      const taskRows=await insert('agency_tasks',{
+        client_id:body.client_id||null,
+        title:body.title.trim(),
+        description:body.description||null,
+        assigned_to:body.assigned_to||null,
+        priority:body.priority||'normal',
+        status:'open',
+        due_at:body.due_at ? new Date(body.due_at).toISOString() : null
+      });
+      return sendJson(res,201,{task:taskRows?.[0]||null});
+    }
+
+    if(!clientId) return sendJson(res,400,{error:'client_id requerido'});
     const client=await findClientById(clientId);
     if(!client) return sendJson(res,404,{error:'Cliente no encontrado'});
 
     if(req.method==='PATCH'){
-      if(body.action==='task_update'){
-        if(!body.task_id) return sendJson(res,400,{error:'task_id requerido'});
-        const taskPayload={updated_at:new Date().toISOString()};
-        for(const key of ['title','description','assigned_to','priority','status']){
-          if(Object.prototype.hasOwnProperty.call(body,key)) taskPayload[key]=body[key]||null;
-        }
-        if(Object.prototype.hasOwnProperty.call(body,'due_at')){
-          taskPayload.due_at=body.due_at ? new Date(body.due_at).toISOString() : null;
-        }
-        if(body.status==='done') taskPayload.completed_at=new Date().toISOString();
-        if(body.status==='open') taskPayload.completed_at=null;
-        const taskRows=await patch('agency_tasks',{id:`eq.${body.task_id}`},taskPayload);
-        return sendJson(res,200,{task:taskRows?.[0]||null});
-      }
-
       const allowed=[
         'service_start_date','renewal_date','renewal_period_months','billing_phone',
         'service_fee','service_notes','service_status','reminder_enabled','reminder_days_before'
@@ -82,21 +97,6 @@ export default async function handler(req,res){
 
     if(req.method==='POST'){
       const action=body.action||'payment';
-
-      if(action==='task_create'){
-        if(!body.title?.trim()) return sendJson(res,400,{error:'Título requerido'});
-        const taskRows=await insert('agency_tasks',{
-          client_id:body.client_id||null,
-          title:body.title.trim(),
-          description:body.description||null,
-          assigned_to:body.assigned_to||null,
-          priority:body.priority||'normal',
-          status:'open',
-          due_at:body.due_at ? new Date(body.due_at).toISOString() : null
-        });
-        return sendJson(res,201,{task:taskRows?.[0]||null});
-      }
-
       if(action!=='payment') return sendJson(res,400,{error:'Acción no soportada'});
 
       const paidAt=body.paid_at ? new Date(body.paid_at).toISOString() : new Date().toISOString();
