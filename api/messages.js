@@ -9,7 +9,7 @@ function enc(v) { return encodeURIComponent(v); }
 function withMediaUrls(messages) {
   return (messages || []).map(m => ({
     ...m,
-    media_url: m.media_id ? signedMediaUrl(m.id) : null
+    media_url: m.media_id ? signedMediaUrl(m.id, 3600) : null
   }));
 }
 
