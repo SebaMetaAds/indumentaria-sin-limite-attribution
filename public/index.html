@@ -984,7 +984,12 @@ window.transcribeMessage=async(messageId,leadId)=>{
     await openChat(leadId);
     await load();
   }catch(e){
-    alert(e.message);
+    const msg=String(e.message||'');
+    if(/credit card|billing|payment|card/i.test(msg)){
+      alert('La transcripción ya está instalada, pero Vercel AI Gateway requiere una tarjeta válida en la cuenta para procesar audios. El resto del sistema sigue funcionando normalmente.');
+    }else{
+      alert(msg);
+    }
     buttons.forEach(b=>{b.disabled=false;b.textContent='Reintentar transcripción'});
   }
 }
