@@ -32,6 +32,8 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 .campaign .tree-icon{background:#111827;color:#fff}.adset .tree-icon{background:#dbeafe;color:#1d4ed8}.ad .tree-icon{background:#ecfdf5;color:#047857}
 .tree-title{font-weight:700}.adset .tree-title{font-weight:650}.ad .tree-title{font-weight:600}.tree-sub{font-size:10px;color:#9ca3af;margin-top:2px}
 .tree-summary{font-size:10px;color:#6b7280;margin-left:4px}.num-strong{font-weight:700}
+.renewal-badge{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:700}.renewal-ok{background:#ecfdf5;color:#166534}.renewal-soon{background:#fffbeb;color:#92400e}.renewal-due{background:#fff7ed;color:#9a3412}.renewal-overdue{background:#fef2f2;color:#991b1b}.renewal-off{background:#f3f4f6;color:#6b7280}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form-field{display:flex;flex-direction:column;gap:5px}.form-field.full{grid-column:1/-1}.form-field label{font-size:11px;font-weight:700;color:#4b5563}.form-field input,.form-field select,.form-field textarea{border:1px solid #d1d5db;border-radius:9px;padding:10px;font:inherit}.form-field textarea{min-height:90px;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.service-kpis{display:flex;gap:8px;flex-wrap:wrap}.service-kpi{font-size:11px;padding:6px 9px;border:1px solid #e5e7eb;border-radius:999px;background:#fff}
 @media(max-width:850px){.top{position:static}.section-tools{width:100%;margin-left:0}.search{min-width:0;flex:1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -59,6 +61,17 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="card interactive" onclick="focusSection('adsSection')"><div class="metric-click"><div class="k">ROAS real</div><span class="metric-arrow">→</span></div><div id="roas" class="v">—</div><div class="s">facturación / gasto</div></div>
 </div>
 
+<div class="section" id="servicesSection">
+  <div class="section-head">
+    <div class="section-title"><h2>Servicios y renovaciones</h2><span id="serviceCount" class="table-count"></span></div>
+    <div id="serviceKpis" class="service-kpis"></div>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Inicio</th><th>Último pago</th><th>Próxima renovación</th><th>Estado</th><th>Recordatorio</th><th>Tel. cobro</th><th>Acciones</th></tr></thead>
+    <tbody id="servicesBody"></tbody>
+  </table></div>
+</div>
+
 <div class="section"><div class="section-head"><h2>Clientes de la agencia</h2><span class="badge">Multi-cliente</span></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>WhatsApp</th><th>Conexión</th><th>Chats</th><th>Ventas</th><th>Facturación</th><th>Gasto</th><th>CPA</th><th>ROAS</th><th>Acciones</th></tr></thead><tbody id="clientsBody"></tbody></table></div></div>
 
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
@@ -66,6 +79,27 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="won">Ventas</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Estado</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
+
+<div id="serviceModal" class="modal hide">
+  <div class="modal-card" style="width:min(680px,96vw)">
+    <div class="modal-head"><h3 id="serviceTitle">Servicio del cliente</h3><button class="modal-close" onclick="closeServiceModal()">Cerrar</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="serviceClientId">
+      <div class="form-grid">
+        <div class="form-field"><label>Inicio del servicio</label><input id="serviceStart" type="date"></div>
+        <div class="form-field"><label>Próxima renovación</label><input id="serviceRenewal" type="date"></div>
+        <div class="form-field"><label>Ciclo de renovación</label><select id="serviceMonths"><option value="1">Mensual</option><option value="2">Cada 2 meses</option><option value="3">Trimestral</option><option value="6">Semestral</option><option value="12">Anual</option></select></div>
+        <div class="form-field"><label>Estado del servicio</label><select id="serviceStatus"><option value="active">Activo</option><option value="paused">Pausado</option><option value="cancelled">Cancelado</option></select></div>
+        <div class="form-field"><label>Teléfono para cobro</label><input id="billingPhone" placeholder="54911..."></div>
+        <div class="form-field"><label>Honorario mensual (opcional)</label><input id="serviceFee" type="number" min="0" step="0.01"></div>
+        <div class="form-field"><label>Días antes para recordar</label><input id="reminderDays" type="number" min="0" max="30" value="1"></div>
+        <div class="form-field"><label>Recordatorio</label><select id="reminderEnabled"><option value="true">Activado</option><option value="false">Desactivado</option></select></div>
+        <div class="form-field full"><label>Notas</label><textarea id="serviceNotes" placeholder="Detalles del servicio, condiciones, acuerdos, etc."></textarea></div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-light" onclick="closeServiceModal()">Cancelar</button><button class="btn btn-dark" onclick="saveService()">Guardar servicio</button></div>
+    </div>
+  </div>
+</div>
 
 <div id="messagesModal" class="modal hide">
   <div class="modal-card">
@@ -122,6 +156,97 @@ function showToast(message){
   clearTimeout(showToast._t);showToast._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function focusSection(id){$(id)?.scrollIntoView({behavior:'smooth',block:'start'})}
+
+function fmtDate(v){
+  if(!v)return '—';
+  const d=new Date(String(v).slice(0,10)+'T12:00:00');
+  return d.toLocaleDateString('es-AR');
+}
+function daysUntil(v){
+  if(!v)return null;
+  const now=new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const d=new Date(String(v).slice(0,10)+'T12:00:00');
+  const target=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  return Math.round((target-today)/86400000);
+}
+function serviceState(c){
+  if(c.service_status==='paused')return {label:'Pausado',cls:'renewal-off'};
+  if(c.service_status==='cancelled')return {label:'Cancelado',cls:'renewal-off'};
+  if(!c.renewal_date)return {label:'Sin configurar',cls:'renewal-off'};
+  const d=daysUntil(c.renewal_date);
+  if(d<0)return {label:'Vencido hace '+Math.abs(d)+'d',cls:'renewal-overdue'};
+  if(d===0)return {label:'Vence hoy',cls:'renewal-due'};
+  if(d===1)return {label:'Vence mañana',cls:'renewal-due'};
+  if(d<=3)return {label:'Vence en '+d+' días',cls:'renewal-soon'};
+  return {label:'Al día',cls:'renewal-ok'};
+}
+function renderServices(){
+  if(!data)return;
+  const rows=[...(data.by_client||[])];
+  let overdue=0,soon=0,ok=0;
+  $('servicesBody').innerHTML=rows.map(c=>{
+    const st=serviceState(c);
+    const d=daysUntil(c.renewal_date);
+    if(d!=null&&d<0)overdue++; else if(d!=null&&d<=3)soon++; else if(d!=null)ok++;
+    const reminder=c.reminder_enabled!==false ? ((c.reminder_days_before??1)+' día'+((c.reminder_days_before??1)===1?'':'s')+' antes') : 'Desactivado';
+    return `<tr>
+      <td><b>${esc(c.name)}</b></td>
+      <td>${fmtDate(c.service_start_date)}</td>
+      <td>${c.last_payment_at?new Date(c.last_payment_at).toLocaleDateString('es-AR'):'—'}</td>
+      <td><b>${fmtDate(c.renewal_date)}</b></td>
+      <td><span class="renewal-badge ${st.cls}">${esc(st.label)}</span></td>
+      <td>${esc(reminder)}</td>
+      <td>${esc(c.billing_phone||c.whatsapp_number||'—')}</td>
+      <td><button class="btn btn-light" onclick="openService('${c.id}')">Configurar</button> <button class="btn btn-dark" onclick="registerServicePayment('${c.id}')">Pagó hoy</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" class="muted">No hay clientes.</td></tr>';
+  $('serviceCount').textContent=rows.length+' cliente'+(rows.length===1?'':'s');
+  $('serviceKpis').innerHTML='<span class="service-kpi good">'+ok+' al día</span><span class="service-kpi warn">'+soon+' por vencer</span><span class="service-kpi bad">'+overdue+' vencidos</span>';
+}
+window.closeServiceModal=()=>{$('serviceModal').classList.add('hide')};
+window.openService=id=>{
+  const c=(data?.by_client||[]).find(x=>x.id===id); if(!c)return;
+  $('serviceClientId').value=id;
+  $('serviceTitle').textContent='Servicio — '+c.name;
+  $('serviceStart').value=c.service_start_date||'';
+  $('serviceRenewal').value=c.renewal_date||'';
+  $('serviceMonths').value=String(c.renewal_period_months||1);
+  $('serviceStatus').value=c.service_status||'active';
+  $('billingPhone').value=c.billing_phone||c.whatsapp_number||'';
+  $('serviceFee').value=c.service_fee??'';
+  $('reminderDays').value=String(c.reminder_days_before??1);
+  $('reminderEnabled').value=String(c.reminder_enabled!==false);
+  $('serviceNotes').value=c.service_notes||'';
+  $('serviceModal').classList.remove('hide');
+};
+window.saveService=async()=>{
+  const client_id=$('serviceClientId').value;
+  try{
+    await api('/api/service',{method:'PATCH',body:JSON.stringify({
+      client_id,
+      service_start_date:$('serviceStart').value||null,
+      renewal_date:$('serviceRenewal').value||null,
+      renewal_period_months:Number($('serviceMonths').value||1),
+      service_status:$('serviceStatus').value,
+      billing_phone:$('billingPhone').value.trim()||null,
+      service_fee:$('serviceFee').value||null,
+      reminder_days_before:Number($('reminderDays').value||1),
+      reminder_enabled:$('reminderEnabled').value==='true',
+      service_notes:$('serviceNotes').value.trim()||null
+    })});
+    closeServiceModal(); showToast('Servicio actualizado'); await load();
+  }catch(e){alert(e.message)}
+};
+window.registerServicePayment=async id=>{
+  const c=(data?.by_client||[]).find(x=>x.id===id);
+  if(!c)return;
+  if(!confirm('¿Registrar que '+c.name+' pagó hoy y avanzar su próxima renovación?'))return;
+  try{
+    const r=await api('/api/service',{method:'POST',body:JSON.stringify({client_id:id,action:'payment'})});
+    showToast('Pago registrado · próxima renovación '+fmtDate(r.next_renewal_date));
+    await load();
+  }catch(e){alert(e.message)}
+};
 
 function aggregateAdRows(rows){
   const a={spend:0,leads:0,purchases:0,revenue:0};
@@ -270,6 +395,7 @@ async function load(){
       <td><button class="btn btn-dark" onclick="viewClient('${c.id}')">Ver</button> <button class="btn btn-light" onclick="editClient('${c.id}')">Configurar</button></td>
     </tr>`).join('')||'<tr><td colspan="10" class="muted">No hay clientes activos.</td></tr>';
 
+    renderServices();
     renderAds();
 
     renderLeads();
@@ -346,6 +472,7 @@ window.openMessages=async(clientId,adId,adName)=>{
   }
 };
 $('messagesModal').addEventListener('click',e=>{if(e.target===$('messagesModal'))closeMessages()});
+$('serviceModal').addEventListener('click',e=>{if(e.target===$('serviceModal'))closeServiceModal()});
 
 window.viewClient=id=>{$('clientFilter').value=id;load()};
 
