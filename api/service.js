@@ -68,7 +68,8 @@ export default async function handler(req,res){
       const currentRenewal=isoDate(client.renewal_date);
       const baseDate=currentRenewal && currentRenewal>=paidDate ? currentRenewal : paidDate;
       const nextRenewal=isoDate(body.next_renewal_date) || addMonths(baseDate,months);
-      const amount=body.amount==null||body.amount==='' ? null : Number(body.amount);
+      const rawAmount=body.amount==null||body.amount==='' ? client.service_fee : body.amount;
+      const amount=rawAmount==null||rawAmount==='' ? null : Number(rawAmount);
 
       const paymentRows=await insert('client_service_payments',{
         client_id:clientId,
