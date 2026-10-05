@@ -3,6 +3,9 @@ import { patch, select } from '../lib/supabase.js';
 import { getMessagesForClient } from '../lib/messages.js';
 import { signedMediaUrl } from '../lib/media.js';
 import { analyzeConversation } from '../lib/ai-analysis.js';
+import { transcribeWhatsAppAudio } from '../lib/transcription.js';
+import { findClientById } from '../lib/clients.js';
+import { detectPaymentSignal } from '../lib/payment-signals.js';
 
 function enc(v) { return encodeURIComponent(v); }
 
@@ -20,6 +23,44 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const body = readJsonBody(req);
+      if (body.action === 'transcribe') {
+        const messageId = body.message_id || body.messageId;
+        if (!messageId) return sendJson(res,400,{error:'message_id requerido'});
+        const msgRows=await select('messages',`select=*&id=eq.${enc(messageId)}&limit=1`);
+        const message=msgRows?.[0];
+        if(!message || message.message_type!=='audio' || !message.media_id) return sendJson(res,404,{error:'Audio no encontrado'});
+        const client=await findClientById(message.client_id);
+        if(!client) return sendJson(res,404,{error:'Cliente no encontrado'});
+        await patch('messages',{id:`eq.${message.id}`},{transcript_status:'pending',transcript_error:null});
+        try{
+          const result=await transcribeWhatsAppAudio(message,client);
+          const now=new Date().toISOString();
+          await patch('messages',{id:`eq.${message.id}`},{
+            transcript_text:result.text,transcript_status:'done',transcript_model:result.model,transcript_at:now,transcript_error:null
+          });
+          const signal=detectPaymentSignal(result.text);
+          if(signal){
+            const leadRows=await select('leads',`select=*&id=eq.${enc(message.lead_id)}&limit=1`);
+            const lead=leadRows?.[0];
+            if(lead) await patch('leads',{id:`eq.${lead.id}`},{
+              payment_signal_detected_at:message.received_at,
+              payment_signal_type:signal.type,
+              payment_signal_text:signal.text,
+              payment_signal_message_id:message.message_id,
+              payment_check_status:lead.payment_check_status==='paid'?'paid':'pending',
+              payment_checked_at:lead.payment_check_status==='paid'?lead.payment_checked_at||null:null,
+              updated_at:now
+            });
+          }
+          return sendJson(res,200,{transcript:result.text,model:result.model});
+        }catch(error){
+          const unavailable=/payment|billing|credit|card|quota/i.test(error.message);
+          await patch('messages',{id:`eq.${message.id}`},{
+            transcript_status:unavailable?'unavailable':'error',transcript_error:error.message,transcript_at:new Date().toISOString()
+          });
+          return sendJson(res, unavailable?402:500,{error:error.message,unavailable});
+        }
+      }
       if (body.action !== 'analyze') return sendJson(res, 400, { error: 'Acción no soportada' });
       const leadId = body.lead_id || body.leadId;
       if (!leadId) return sendJson(res, 400, { error: 'lead_id requerido' });
