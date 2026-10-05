@@ -1,7 +1,7 @@
 import { sendJson, requireAdmin, isoRange } from '../lib/http.js';
 import { select } from '../lib/supabase.js';
 import { listClients } from '../lib/clients.js';
-import { clientMetaConfig, getAdInsights } from '../lib/meta.js';
+import { clientMetaConfig, getAdInsights, hasMetaToken } from '../lib/meta.js';
 
 function enc(v) { return encodeURIComponent(v); }
 function n(v) { return Number(v || 0); }
@@ -19,7 +19,6 @@ export default async function handler(req, res) {
   try {
     const { since, until, days } = isoRange(req.query || {});
     const requestedClientId = req.query?.client_id && req.query.client_id !== 'all' ? req.query.client_id : null;
-
     const clients = await listClients();
     const selectedClients = requestedClientId
       ? clients.filter(c => c.id === requestedClientId)
@@ -28,6 +27,9 @@ export default async function handler(req, res) {
     if (requestedClientId && selectedClients.length === 0) {
       return sendJson(res, 404, { error: 'Cliente no encontrado' });
     }
+
+    const tokenStatuses = new Map(await Promise.all(clients.map(async c => [c.id, await hasMetaToken(c)])));
+    const publicClients = clients.map(c => ({ ...c, meta_token_configured: Boolean(tokenStatuses.get(c.id)) }));
 
     const [leads, sales, insightGroups] = await Promise.all([
       select('leads', rangeQuery('first_message_at', since, until, requestedClientId)),
@@ -43,8 +45,7 @@ export default async function handler(req, res) {
     const salesByLead = new Map();
     for (const s of sales || []) {
       const arr = salesByLead.get(s.lead_id) || [];
-      arr.push(s);
-      salesByLead.set(s.lead_id, arr);
+      arr.push(s); salesByLead.set(s.lead_id, arr);
     }
 
     const spend = insights.reduce((acc, x) => acc + n(x.spend), 0);
@@ -56,16 +57,10 @@ export default async function handler(req, res) {
     for (const insight of insights) {
       const key = `${insight.client_id}:${insight.ad_id}`;
       byAd.set(key, {
-        client_id: insight.client_id,
-        client_name: insight.client_name,
-        ad_id: insight.ad_id,
-        campaign: insight.campaign_name || '',
-        adset: insight.adset_name || '',
-        ad: insight.ad_name || '',
-        spend: n(insight.spend),
-        leads: 0,
-        purchases: 0,
-        revenue: 0
+        client_id: insight.client_id, client_name: insight.client_name,
+        ad_id: insight.ad_id, campaign: insight.campaign_name || '',
+        adset: insight.adset_name || '', ad: insight.ad_name || '',
+        spend: n(insight.spend), leads: 0, purchases: 0, revenue: 0
       });
     }
 
@@ -74,24 +69,14 @@ export default async function handler(req, res) {
       const client = clientById.get(l.client_id);
       if (!byAd.has(key)) {
         byAd.set(key, {
-          client_id: l.client_id,
-          client_name: client?.name || 'Cliente',
-          ad_id: l.meta_ad_id || 'sin_ad',
-          campaign: l.meta_campaign_name || '',
-          adset: l.meta_adset_name || '',
-          ad: l.meta_ad_name || l.referral_headline || 'Sin nombre',
-          spend: 0,
-          leads: 0,
-          purchases: 0,
-          revenue: 0
+          client_id: l.client_id, client_name: client?.name || 'Cliente',
+          ad_id: l.meta_ad_id || 'sin_ad', campaign: l.meta_campaign_name || '',
+          adset: l.meta_adset_name || '', ad: l.meta_ad_name || l.referral_headline || 'Sin nombre',
+          spend: 0, leads: 0, purchases: 0, revenue: 0
         });
       }
-      const row = byAd.get(key);
-      row.leads += 1;
-      for (const s of salesByLead.get(l.id) || []) {
-        row.purchases += 1;
-        row.revenue += n(s.amount);
-      }
+      const row = byAd.get(key); row.leads += 1;
+      for (const s of salesByLead.get(l.id) || []) { row.purchases += 1; row.revenue += n(s.amount); }
     }
 
     const rows = [...byAd.values()].map(x => ({
@@ -109,33 +94,25 @@ export default async function handler(req, res) {
       const cRevenue = cSales.reduce((a,x) => a + n(x.amount), 0);
       const cBuyers = new Set(cSales.map(s => s.lead_id));
       const config = clientMetaConfig(client);
+      const tokenReady = Boolean(tokenStatuses.get(client.id));
       return {
-        id: client.id,
-        name: client.name,
-        slug: client.slug,
-        status: client.status,
-        whatsapp_number: client.whatsapp_number,
-        waba_id: client.waba_id,
-        phone_number_id: client.phone_number_id,
-        ad_account_id: client.ad_account_id,
-        dataset_id: client.dataset_id,
-        conversations: cLeads.length,
-        purchases: cSales.length,
-        unique_buyers: cBuyers.size,
-        spend: cSpend,
-        revenue: cRevenue,
+        id: client.id, name: client.name, slug: client.slug, status: client.status,
+        whatsapp_number: client.whatsapp_number, waba_id: client.waba_id,
+        phone_number_id: client.phone_number_id, ad_account_id: client.ad_account_id,
+        dataset_id: client.dataset_id, meta_token_configured: tokenReady,
+        conversations: cLeads.length, purchases: cSales.length, unique_buyers: cBuyers.size,
+        spend: cSpend, revenue: cRevenue,
         cpa: cSales.length ? cSpend / cSales.length : null,
         roas: cSpend ? cRevenue / cSpend : null,
         close_rate: cLeads.length ? cBuyers.size / cLeads.length : null,
         whatsapp_ready: Boolean(client.waba_id && client.phone_number_id),
-        meta_spend_ready: Boolean(config.adAccountId && process.env.META_ACCESS_TOKEN),
-        meta_purchase_ready: Boolean(config.datasetId && config.wabaId && process.env.META_ACCESS_TOKEN)
+        meta_spend_ready: Boolean(config.adAccountId && tokenReady),
+        meta_purchase_ready: Boolean(config.datasetId && config.wabaId && tokenReady)
       };
     });
 
     const enrichedLeads = (leads || []).map(l => ({
-      ...l,
-      client_name: clientById.get(l.client_id)?.name || 'Cliente',
+      ...l, client_name: clientById.get(l.client_id)?.name || 'Cliente',
       sales: salesByLead.get(l.id) || []
     }));
 
@@ -143,26 +120,20 @@ export default async function handler(req, res) {
       range: { since, until, days },
       selected_client_id: requestedClientId,
       configured: {
-        meta_insights: selectedClients.some(c => Boolean(clientMetaConfig(c).adAccountId && process.env.META_ACCESS_TOKEN)),
-        meta_capi: selectedClients.some(c => Boolean(clientMetaConfig(c).datasetId && clientMetaConfig(c).wabaId && process.env.META_ACCESS_TOKEN)),
+        meta_insights: selectedClients.some(c => Boolean(clientMetaConfig(c).adAccountId && tokenStatuses.get(c.id))),
+        meta_capi: selectedClients.some(c => Boolean(clientMetaConfig(c).datasetId && clientMetaConfig(c).wabaId && tokenStatuses.get(c.id))),
         mercado_pago: Boolean(process.env.MP_ACCESS_TOKEN)
       },
       totals: {
-        spend,
-        conversations: (leads || []).length,
+        spend, conversations: (leads || []).length,
         attributed_conversations: attributedLeads.length,
-        purchases: (sales || []).length,
-        unique_buyers: wonLeads.size,
-        revenue,
+        purchases: (sales || []).length, unique_buyers: wonLeads.size, revenue,
         cost_per_conversation: (leads || []).length ? spend/(leads || []).length : 0,
         cpa: (sales || []).length ? spend/(sales || []).length : 0,
         roas: spend ? revenue/spend : 0,
         close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0
       },
-      clients,
-      by_client: byClient,
-      by_ad: rows,
-      leads: enrichedLeads
+      clients: publicClients, by_client: byClient, by_ad: rows, leads: enrichedLeads
     });
   } catch (error) {
     console.error('dashboard', error);
