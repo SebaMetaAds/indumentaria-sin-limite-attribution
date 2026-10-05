@@ -309,6 +309,26 @@ export default async function handler(req, res) {
       }))
       .sort((a,b) => b.score - a.score);
 
+    const todaySales=(sales||[]).filter(s=>arDate(s.sold_at)===today);
+    const todayRevenue=todaySales.reduce((a,s)=>a+n(s.amount),0);
+    const byPaymentMethod=new Map();
+    for(const s of sales||[]){
+      const key=String(s.payment_method||'otro');
+      const cur=byPaymentMethod.get(key)||{payment_method:key,sales:0,revenue:0};
+      cur.sales+=1;cur.revenue+=n(s.amount);byPaymentMethod.set(key,cur);
+    }
+    const salesByClient=(byClient||[]).map(c=>({
+      client_id:c.id,client_name:c.name,sales:c.purchases,revenue:c.revenue,
+      average_ticket:c.purchases?c.revenue/c.purchases:0
+    })).sort((a,b)=>b.revenue-a.revenue);
+    const leadById=new Map((leads||[]).map(l=>[l.id,l]));
+    const recentSales=(sales||[]).slice(0,50).map(s=>{
+      const l=leadById.get(s.lead_id);
+      return {...s,contact_name:l?.contact_name||null,phone:l?.phone||null,
+        client_name:clientById.get(s.client_id)?.name||'Cliente',
+        assigned_to:l?.assigned_to||null,ad_name:l?.meta_ad_name||l?.referral_headline||null};
+    });
+
     const adAlerts = [];
     for (const row of rows) {
       if (row.spend >= 20000 && row.leads === 0) {
@@ -349,6 +369,18 @@ export default async function handler(req, res) {
         roas: spend ? revenue/spend : 0,
         close_rate: (leads || []).length ? wonLeads.size/(leads || []).length : 0,
         unpriced_sales: unpricedSales
+      },
+      sales_center: {
+        period_sales:(sales||[]).length,
+        period_revenue:revenue,
+        average_ticket:(sales||[]).length?revenue/(sales||[]).length:0,
+        today_sales:todaySales.length,
+        today_revenue:todayRevenue,
+        unpriced_sales:unpricedSales,
+        payments_pending:pendingPayments.length,
+        by_payment_method:[...byPaymentMethod.values()].sort((a,b)=>b.revenue-a.revenue),
+        by_client:salesByClient,
+        recent_sales:recentSales
       },
       agency_finance: {
         active_clients: activeServiceClients.length,
