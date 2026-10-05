@@ -1,7 +1,8 @@
-import { sendJson, requireAdmin, isoRange } from '../lib/http.js';
-import { select } from '../lib/supabase.js';
+import { sendJson, readJsonBody, requireAdmin, isoRange } from '../lib/http.js';
+import { patch, select } from '../lib/supabase.js';
 import { getMessagesForClient } from '../lib/messages.js';
 import { signedMediaUrl } from '../lib/media.js';
+import { analyzeConversation } from '../lib/ai-analysis.js';
 
 function enc(v) { return encodeURIComponent(v); }
 
@@ -14,12 +15,43 @@ function withMediaUrls(messages) {
 
 export default async function handler(req, res) {
   if (!requireAdmin(req, res)) return;
-  if (req.method !== 'GET') return sendJson(res, 405, { error: 'Método no permitido' });
+  if (!['GET','POST'].includes(req.method)) return sendJson(res, 405, { error: 'Método no permitido' });
 
   try {
+    if (req.method === 'POST') {
+      const body = readJsonBody(req);
+      if (body.action !== 'analyze') return sendJson(res, 400, { error: 'Acción no soportada' });
+      const leadId = body.lead_id || body.leadId;
+      if (!leadId) return sendJson(res, 400, { error: 'lead_id requerido' });
+
+      const leadRows = await select('leads', `select=*&id=eq.${enc(leadId)}&limit=1`);
+      const lead = leadRows?.[0];
+      if (!lead) return sendJson(res, 404, { error: 'Conversación no encontrada' });
+      const messages = await select('messages', `select=*&lead_id=eq.${enc(leadId)}&order=received_at.asc&limit=3000`);
+      const analysis = await analyzeConversation({ lead, messages });
+      const now = new Date().toISOString();
+
+      const rows = await patch('leads', { id: `eq.${leadId}` }, {
+        ai_summary: analysis.summary,
+        ai_intent: analysis.intent,
+        ai_score: analysis.score,
+        ai_products: analysis.products,
+        ai_objections: analysis.objections,
+        ai_next_action: analysis.next_action,
+        ai_sentiment: analysis.sentiment,
+        ai_requires_attention: analysis.requires_attention,
+        ai_analyzed_at: now,
+        ai_model: analysis.model,
+        ai_message_count: analysis.message_count,
+        updated_at: now
+      });
+
+      return sendJson(res, 200, { analysis, lead: rows?.[0] || lead });
+    }
+
     const leadId = req.query?.lead_id;
     if (leadId) {
-      const leadRows = await select('leads', `select=id,client_id,phone,contact_name,status,source,ctwa_clid,meta_campaign_name,meta_adset_name,meta_ad_name,meta_ad_id,first_message_at,last_message_at&id=eq.${enc(leadId)}&limit=1`);
+      const leadRows = await select('leads', `select=id,client_id,phone,contact_name,status,source,ctwa_clid,meta_campaign_name,meta_adset_name,meta_ad_name,meta_ad_id,referral_headline,first_message_at,last_message_at,pipeline_stage,assigned_to,follow_up_at,ai_summary,ai_intent,ai_score,ai_products,ai_objections,ai_next_action,ai_sentiment,ai_requires_attention,ai_analyzed_at,ai_model,ai_message_count&id=eq.${enc(leadId)}&limit=1`);
       const lead = leadRows?.[0];
       if (!lead) return sendJson(res, 404, { error: 'Conversación no encontrada' });
 
