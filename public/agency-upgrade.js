@@ -26,7 +26,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 document.body.classList.add("agency-enhanced","agency-tabs-enabled");document.body.append(side,backdrop,toggle);
 function init(){
  const wrap=document.querySelector(".wrap"),cards=wrap?.querySelector(".cards");if(!wrap)return;
- const intro=document.createElement("section");intro.id="agencyHomeIntro";intro.className="agency-home-intro";intro.innerHTML='<h2>Resumen general</h2><p>Indicadores principales de tu agencia. Elegí una sección del menú para gestionar ventas, campañas, clientes o Tiendanube.</p>';if(cards)cards.before(intro);
+ const intro=document.createElement("section");intro.id="agencyHomeIntro";intro.className="agency-home-intro";intro.innerHTML='<h2>Resumen general</h2><p>Indicadores principales de tu agencia. Elegí una sección del menú para gestionar ventas, campañas, clientes o Tiendanube.</p>';if(cards){cards.before(intro);const breakdown=document.createElement("section");breakdown.id="agencyHomeRevenueDetail";breakdown.className="agency-home-revenue-detail";breakdown.hidden=true;cards.after(breakdown)}
  const tn=document.getElementById("tiendanubeModule");if(tn){const tab=document.createElement("div");tab.id="tiendanubeTab";tab.className="section agency-tiendanube-tab";const anchor=document.getElementById("salesCenterSection");anchor?.after(tab);tab.append(tn)}
  const go=window.focusSection;window.focusSection=function(id){if(document.getElementById(id)){activate(id);return}if(typeof go==="function")go(id)};
  const hash=decodeURIComponent(location.hash.slice(1));activate(items.some(x=>x[2]===hash)?hash:"home",false);
