@@ -43,6 +43,22 @@ function renderUnified(d,tn){
    item.append(name,source,total,ordersText,trend);rows.append(item)}
   if(!sorted.length){const none=document.createElement("p");none.textContent="Todavía no hay resultados para este período.";rows.append(none)}
   byClient.append(rows);home.append(byClient);
+  const alerts=document.createElement("section");alerts.className="agency-home-alerts";
+  const alertTitle=document.createElement("strong");alertTitle.textContent="Señales para revisar";alerts.append(alertTitle);
+  const suggestions=[];
+  const best=success.slice().sort((a,b)=>amount(b.paid_revenue)-amount(a.paid_revenue))[0];
+  if(best)suggestions.push(["Mayor facturación",names.get(String(best.client_id))||best.name||"Tienda "+best.store_id,fmt(best.paid_revenue)+" en "+tn.days+" días","info"]);
+  for(const store of success){
+   const name=names.get(String(store.client_id))||store.name||"Tienda "+store.store_id;
+   const rate=amount(store.orders)>0?100*amount(store.cancelled_orders)/amount(store.orders):0;
+   if(amount(store.orders)>=10&&rate>=10)suggestions.push(["Cancelaciones elevadas",name,rate.toFixed(1)+"% de pedidos cancelados ("+store.cancelled_orders+"/"+store.orders+")","warning"]);
+   const previous=store.previous_paid_revenue;
+   if(previous!=null&&amount(previous)>0){const change=100*(amount(store.paid_revenue)-amount(previous))/amount(previous);if(change<=-15)suggestions.push(["Caída de facturación",name,change.toFixed(1)+"% frente al período anterior","warning"])}
+  }
+  if(!suggestions.length)suggestions.push(["Sin alertas destacadas","Tiendanube","No se detectaron cancelaciones elevadas ni caídas significativas con las reglas actuales.","info"]);
+  const list=document.createElement("div");list.className="agency-home-alert-list";
+  for(const [type,name,details,level] of suggestions.slice(0,8)){const card=document.createElement("div");card.className="agency-home-alert "+level;const a=document.createElement("small");a.textContent=type;const b=document.createElement("b");b.textContent=name;const c=document.createElement("span");c.textContent=details;card.append(a,b,c);list.append(card)}
+  alerts.append(list);home.append(alerts);
  }
 
  const rev=document.getElementById("revenue"),revNote=document.getElementById("revenueNote"),purchases=document.getElementById("purchases");
