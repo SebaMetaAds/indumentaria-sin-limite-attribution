@@ -46,7 +46,7 @@ function summarize(orders){
 
 async function handleTiendaNube(req,res){
   if(req.method==='GET'&&String(req.query?.callback||'')==='1'){
- res.setHeader('Set-Cookie','tn_oauth_nonce=; Path=/api/tiendanube; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
+ res.setHeader('Set-Cookie','tn_oauth_nonce=; Path=/api/health; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
  try{
  const code=String(req.query?.code||''),state=String(req.query?.state||'');
  const [payload,sig,...extra]=state.split('.');
@@ -76,7 +76,7 @@ async function handleTiendaNube(req,res){
  if(!clients?.length)return sendJson(res,404,{error:'El cliente no existe'});
  const nonce=crypto.randomBytes(24).toString('base64url'),payload=Buffer.from(JSON.stringify({client_id:clientId,nonce,expires:Date.now()+300000})).toString('base64url');
  const sign=crypto.createHmac('sha256',master).update(payload).digest('base64url');
- res.setHeader('Set-Cookie','tn_oauth_nonce='+nonce+'; Path=/api/tiendanube; HttpOnly; Secure; SameSite=Lax; Max-Age=300');
+ res.setHeader('Set-Cookie','tn_oauth_nonce='+nonce+'; Path=/api/health; HttpOnly; Secure; SameSite=Lax; Max-Age=300');
  return sendJson(res,200,{url:'https://www.tiendanube.com/apps/'+appId+'/authorize?state='+encodeURIComponent(payload+'.'+sign)});
   }
   if(req.method!=='GET')return sendJson(res,405,{error:'Método no permitido'});
