@@ -60,6 +60,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <link rel="stylesheet" href="/agency-tiendanube-chart.css">
 <link rel="stylesheet" href="/agency-tiendanube-compare.css">
 <style id="agency-client-report-style">.agency-report-dialog{margin:14px 0;padding:14px;background:#faf9ff;border:1px solid #ddd5f6;border-radius:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.agency-report-dialog strong{color:#443987;font-size:13px}.agency-report-dialog select,.agency-report-dialog button{border:1px solid #d8d0f2;border-radius:9px;padding:9px 12px;background:white}.agency-report-dialog button{background:#6757bd;color:white;cursor:pointer}.agency-report-dialog button:disabled{opacity:.5}.agency-report-dialog small{flex-basis:100%;font-size:11px;color:#726986}</style>
+<style id="agency-client-editor-style">.agency-client-edit{margin:14px 0;padding:18px;background:#fff;border:1px solid #ded9f1;border-radius:13px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}.agency-client-edit>strong{color:#3f3489}.agency-client-edit>select{padding:10px;border:1px solid #d4cdef;border-radius:8px}.agency-client-edit-grid{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.agency-client-edit-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#666}.agency-client-edit-grid input,.agency-client-edit-grid textarea{width:100%;border:1px solid #d8d4e9;border-radius:8px;padding:10px;font:inherit}.agency-client-edit-grid textarea{min-height:70px}.agency-client-edit-note{font-size:11px;color:#6c6787;width:100%}.agency-client-edit>button{border:none;border-radius:8px;background:#6654c6;color:#fff;padding:10px 14px;cursor:pointer}.agency-client-edit>button:disabled{opacity:.6}.agency-client-edit>small{width:100%}@media(max-width:700px){.agency-client-edit-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 <div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="loginBtn" type="button">Ingresar</button><div id="loginError" role="alert" aria-live="polite" style="display:none;margin-top:12px;padding:11px 12px;border-radius:9px;background:#fef2f2;color:#991b1b;font-size:12px;line-height:1.4"></div></div></div>
@@ -1252,4 +1253,5 @@ if(pwd)load();
 
 <script src="/agency-unified-revenue.js" defer></script>
 <script src="/agency-client-reports.js" defer></script>
+<script src="/agency-client-editor.js" defer></script>
 </body></html>
