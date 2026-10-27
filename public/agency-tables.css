@@ -1,0 +1,22 @@
+/* Enhancements for the live Ads + WhatsApp sections; no API or event-handler changes */
+#adsSection,#leadsSection{scroll-margin-top:115px}
+.agency-section-intro{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:14px 18px;background:linear-gradient(110deg,#f3f0ff,#f9faff);border-bottom:1px solid #e6e2fa}
+.agency-section-intro>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.agency-section-intro strong{color:#443c99;font-size:12px}
+.agency-section-intro p{margin:0;font-size:11px;color:#79758e}
+.agency-section-badge{border-radius:100px;background:#e7e3ff;color:#6254c7;font-weight:750;font-size:10px;padding:6px 9px}
+.agency-table-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.agency-table-actions button{border:1px solid #dedbf4;border-radius:9px;padding:8px 11px;background:#fff;color:#5145b2;font-size:11px;font-weight:750;cursor:pointer;transition:background .2s,transform .2s}
+.agency-table-actions button:hover{background:#eeeaff;transform:translateY(-2px)}
+#adsSection .table-wrap,#leadsSection .table-wrap{max-height:620px;overflow:auto;scrollbar-color:#bbb5ee #f6f6fa}
+#adsSection table,#leadsSection table{border-collapse:separate;border-spacing:0}
+#adsSection th,#leadsSection th{position:sticky;top:0;z-index:2;background:#f3f2fc;box-shadow:0 1px #e5e1fa}
+#adsSection tbody tr,#leadsSection tbody tr{transition:background .18s ease}
+#adsSection tbody tr:hover,#leadsSection tbody tr:hover{background:#f3f0ff}
+#adsSection tbody tr:focus-within,#leadsSection tbody tr:focus-within{background:#f0eeff}
+#adsSection .section-head,#leadsSection .section-head{background:linear-gradient(100deg,#fff,#fbfaff)}
+#adsSection .search:focus,#leadsSection .search:focus{outline:3px solid #7866ef26;border-color:#7b6ceb}
+#adsSection .section-title h2:before,#leadsSection .section-title h2:before{content:"";display:inline-block;width:5px;height:18px;background:#7567eb;border-radius:6px;margin-right:9px;vertical-align:-4px}
+body.agency-enhanced #adsSection .chips .chip.active,body.agency-enhanced #leadsSection .chips .chip.active{background:#6256d7;border-color:#6256d7;color:#fff}
+@media(max-width:720px){.agency-section-intro{padding:13px}.agency-section-intro p{flex-basis:100%}#adsSection .table-wrap,#leadsSection .table-wrap{max-height:70vh}}
+@media(prefers-reduced-motion:reduce){.agency-table-actions button,#adsSection tbody tr,#leadsSection tbody tr{transition:none}}
