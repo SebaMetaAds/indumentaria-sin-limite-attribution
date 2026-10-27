@@ -47,6 +47,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <link rel="stylesheet" href="/agency-chat-dates.css">
 <link rel="stylesheet" href="/agency-crm-date.css">
 <link rel="stylesheet" href="/agency-crm-activity.css">
+<link rel="stylesheet" href="/agency-crm-summary.css">
 </head>
 <body>
 <div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="loginBtn" type="button">Ingresar</button><div id="loginError" role="alert" aria-live="polite" style="display:none;margin-top:12px;padding:11px 12px;border-radius:9px;background:#fef2f2;color:#991b1b;font-size:12px;line-height:1.4"></div></div></div>
@@ -902,6 +903,8 @@ function crmLastMessageDate(lead){
 }
 function renderLeads(){
   if(!data)return;
+  window.__agencyCrmSnapshot=data.leads||[];
+  window.dispatchEvent(new Event('agency:crm-data'));
   const activityFilter=document.getElementById('crmActivityFilter')?.value||'all';
   const sortOrder=document.getElementById('crmActivitySort')?.value||'recent';
   const q=($('leadSearch')?.value||'').trim().toLowerCase();
@@ -1200,4 +1203,5 @@ if(pwd)load();
 <script src="/agency-tables.js" defer></script>
 <script src="/agency-productivity.js" defer></script>
 <script src="/agency-crm-activity.js" defer></script>
+<script src="/agency-crm-summary.js" defer></script>
 </body></html>
