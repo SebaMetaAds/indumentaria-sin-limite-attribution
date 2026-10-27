@@ -37,6 +37,7 @@ async function refresh(){
   if(!response.ok)throw new Error(data.error||"No se pudo consultar Tiendanube");
   content.replaceChildren();
   if(!data.configured){const p=document.createElement("p");p.className="tn-empty";p.textContent="Todavía no hay tiendas vinculadas. Usá «Conectar tienda» para autorizar una Tiendanube.";content.appendChild(p);return}
+  if(typeof window.renderTiendanubeComparison==="function")window.renderTiendanubeComparison(data.stores,content,money);
   for(const store of data.stores){
     const card=document.createElement("article");card.className="tn-store";
     const title=document.createElement("strong");title.textContent=store.name;
