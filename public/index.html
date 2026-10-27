@@ -1024,6 +1024,22 @@ function renderDatedMessages(messages){
     return separator+renderMessageBubble(m);
   }).join('');
 }
+function whatsappUnsupportedLabel(m){
+  const kind=String(m?.message_type||'').toLowerCase();
+  const labels={
+    unsupported:'Mensaje no compatible con la API de WhatsApp',
+    unknown:'Tipo de mensaje no reconocido por WhatsApp',
+    location:'Ubicación compartida (no disponible en este visor)',
+    contacts:'Contacto compartido (no disponible en este visor)',
+    order:'Pedido de catálogo (contenido no disponible)',
+    system:'Notificación del sistema de WhatsApp',
+    ephemeral:'Mensaje temporal de WhatsApp'
+  };
+  return labels[kind]||'Contenido no disponible en este visor';
+}
+function isUnsupportedWhatsAppText(value){
+  return /^\\s*\\[?unsupported\\]?\\s*$/i.test(String(value||''));
+}
 function renderMessageBubble(m){
   const dir=m.direction==='outbound'?'outbound':'inbound';
   const label=dir==='outbound'?'Negocio':'Cliente';
@@ -1055,7 +1071,11 @@ function renderMessageBubble(m){
   if(m.payment_proof_candidate) media+='<div class="proof-badge">Posible comprobante · '+esc(m.payment_proof_reason||'verificar')+'</div>';
 
   const fallback=m.message_type==='interactive'?'Contenido interactivo de WhatsApp':m.message_type==='reaction'?'Reacción de WhatsApp':'['+esc(m.message_type||'mensaje')+']';
-  const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">'+fallback+'</div>':'');
+  const unsupported=isUnsupportedWhatsAppText(m.message_text)||['unsupported','unknown'].includes(String(m.message_type||'').toLowerCase());
+  const text=unsupported
+    ? '<div class="msg-text whatsapp-unsupported"><strong>ⓘ '+esc(whatsappUnsupportedLabel(m))+'</strong><small>WhatsApp no proporcionó un contenido legible para este mensaje. Podés consultarlo desde WhatsApp si está disponible.</small></div>'
+    : m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>'
+    : (!media?'<div class="msg-text whatsapp-unsupported">'+esc(whatsappUnsupportedLabel(m))+'</div>':'');
   return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+esc(chatDateLabel(m.received_at))+' · '+esc(chatTimeLabel(m.received_at))+' hs</div></div></div>';
 }
 
