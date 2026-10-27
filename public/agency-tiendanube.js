@@ -18,7 +18,7 @@ connect.addEventListener("click",async()=>{
 });
 async function startConnect(clientId){
  const password=sessionStorage.getItem("agency_pwd");
- const response=await fetch("/api/tiendanube-connect",{method:"POST",headers:{"x-admin-password":password,"Content-Type":"application/json"},body:JSON.stringify({client_id:clientId})});
+ const response=await fetch("/api/tiendanube",{method:"POST",headers:{"x-admin-password":password,"Content-Type":"application/json"},body:JSON.stringify({client_id:clientId})});
  const result=await response.json();
  if(!response.ok)throw Error(result.error||"No se pudo conectar");
  window.location.assign(result.url)
