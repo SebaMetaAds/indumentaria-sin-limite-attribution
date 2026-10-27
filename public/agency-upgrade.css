@@ -28,3 +28,14 @@ body.agency-enhanced .controls button:hover{transform:translateY(-1px)}
 @media(max-width:1180px){.agency-sidebar{width:185px}body.agency-enhanced>.wrap{margin-left:185px;padding:18px}.agency-logo{font-size:12px}}
 @media(max-width:900px){.agency-sidebar{transform:translateX(-102%);transition:transform .25s;width:245px;z-index:15}.agency-sidebar.open{transform:translateX(0)}.agency-menu-toggle{display:block;position:fixed;left:12px;bottom:18px;z-index:10;border:0;border-radius:12px;background:#6c60db;color:white;padding:12px 15px;font-weight:800;box-shadow:0 8px 24px #0002}body.agency-enhanced>.wrap{margin-left:0;padding:15px}.agency-backdrop.open{display:block;position:fixed;inset:0;background:#0009;z-index:14}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.agency-sidebar,.agency-nav button,body.agency-enhanced .card{transition:none!important}}
+
+/* Distinct, accessible screens: only the selected section is visible */
+body.agency-tabs-enabled .wrap > .section{display:none!important}
+body.agency-tabs-enabled .wrap > .section.agency-tab-visible{display:block!important}
+body.agency-tabs-enabled .wrap > .cards[hidden],body.agency-tabs-enabled #agencyHomeIntro[hidden]{display:none!important}
+.agency-home-intro{margin:0 0 17px;padding:21px 24px;border:1px solid #e5e4f3;border-radius:16px;background:linear-gradient(110deg,#fff,#f5f3ff)}
+.agency-home-intro h2{margin:0 0 6px;font-size:19px;color:#252043}.agency-home-intro p{margin:0;color:#74748c;font-size:12px;line-height:1.6}
+.agency-nav-button[aria-current="page"]{font-weight:750}
+body.agency-tabs-enabled .agency-tiendanube-tab{padding:0;overflow:hidden}
+body.agency-tabs-enabled .agency-tiendanube-tab .tiendanube-module{border:0}
+@media(max-width:780px){.agency-home-intro{padding:16px}}
