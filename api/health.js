@@ -16,8 +16,8 @@ function config(){
   if(!Array.isArray(stores))throw new Error('TIENDANUBE_STORES_JSON debe ser una lista');
   return stores.filter(x=>x&&/^[a-z0-9-]{3,80}$/i.test(String(x.client_id||''))&&/^\d+$/.test(String(x.store_id||''))&&typeof x.access_token==='string'&&x.access_token.length>8);
 }
-async function requestOrders(store,days){
-  const now=new Date();
+async function requestOrders(store,days,offsetDays=0){
+  const now=new Date(Date.now()-offsetDays*86400000);
   const start=new Date(now.getTime()-(days-1)*86400000);
   const orders=[];
   const maxPages=20,perPage=200;
@@ -87,7 +87,7 @@ async function handleTiendaNube(req,res){
     const stores=dbStores.length?dbStores.map(s=>({client_id:s.client_id,store_id:s.store_id,name:'Tienda '+s.store_id,access_token:decryptTn(s.access_token_enc)})):config().filter(s=>clientId==='all'||s.client_id===clientId);
     const selected=stores.slice(0,12);
     const results=await Promise.all(selected.map(async s=>{
-      try{const orders=await requestOrders(s,days);return {client_id:s.client_id,store_id:String(s.store_id),name:String(s.name||'Tiendanube'),status:'connected',...summarize(orders),recent_orders:orders.slice(0,100).map(o=>({id:String(o.id||''),number:String(o.number||o.id||''),date:o.created_at||null,customer_name:[o.customer?.name,o.contact_name].find(Boolean)||[o.billing_name,o.billing_lastname].filter(Boolean).join(' ')||'—',payment_status:o.payment_status||'unknown',status:o.status||'unknown',shipping_status:o.shipping_status||'unknown',total:num(o.total),currency:o.currency||'ARS',items:(o.products||[]).map(p=>({name:p.name||p.product?.name||'Producto',quantity:num(p.quantity),price:num(p.price)})).slice(0,25)}))}}
+      try{const orders=await requestOrders(s,days);const previous=String(req.query?.compare||'')==='1'?await requestOrders(s,days,days):null;return {previous_paid_revenue:previous?summarize(previous).paid_revenue:null,client_id:s.client_id,store_id:String(s.store_id),name:String(s.name||'Tiendanube'),status:'connected',...summarize(orders),recent_orders:orders.slice(0,100).map(o=>({id:String(o.id||''),number:String(o.number||o.id||''),date:o.created_at||null,customer_name:[o.customer?.name,o.contact_name].find(Boolean)||[o.billing_name,o.billing_lastname].filter(Boolean).join(' ')||'—',payment_status:o.payment_status||'unknown',status:o.status||'unknown',shipping_status:o.shipping_status||'unknown',total:num(o.total),currency:o.currency||'ARS',items:(o.products||[]).map(p=>({name:p.name||p.product?.name||'Producto',quantity:num(p.quantity),price:num(p.price)})).slice(0,25)}))}}
       catch(e){return {client_id:s.client_id,store_id:String(s.store_id),name:String(s.name||'Tiendanube'),status:'error',error:String(e.message||'Error consultando tienda')}}
     }));
     return sendJson(res,200,{configured:stores.length>0,days,stores:results});
