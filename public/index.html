@@ -53,6 +53,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <link rel="stylesheet" href="/agency-priorities.css">
 <link rel="stylesheet" href="/agency-ads-control.css">
 <link rel="stylesheet" href="/agency-ranking.css">
+<link rel="stylesheet" href="/agency-finance.css">
 </head>
 <body>
 <div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="loginBtn" type="button">Ingresar</button><div id="loginError" role="alert" aria-live="polite" style="display:none;margin-top:12px;padding:11px 12px;border-radius:9px;background:#fef2f2;color:#991b1b;font-size:12px;line-height:1.4"></div></div></div>
@@ -972,6 +973,8 @@ async function load(){
     $('refresh').textContent='Actualizando…';
     const client=$('clientFilter').value||'all';
     data=await api(`/api/dashboard?days=${$('days').value}&client_id=${encodeURIComponent(client)}`);
+    window.__agencyFinanceData=data;
+    window.dispatchEvent(new Event('agency:finance-data'));
     $('login').classList.add('hide');
     renderClientFilter(data.clients||[]);
     setStatus(data.configured);
@@ -1235,4 +1238,5 @@ if(pwd)load();
 <script src="/agency-priorities.js" defer></script>
 <script src="/agency-ads-control.js" defer></script>
 <script src="/agency-ranking.js" defer></script>
+<script src="/agency-finance.js" defer></script>
 </body></html>
