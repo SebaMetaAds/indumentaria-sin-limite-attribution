@@ -44,7 +44,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 <link rel="stylesheet" href="/agency-upgrade.css">
 </head>
 <body>
-<div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña"><button id="loginBtn">Ingresar</button></div></div>
+<div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="loginBtn" type="button">Ingresar</button><div id="loginError" role="alert" aria-live="polite" style="display:none;margin-top:12px;padding:11px 12px;border-radius:9px;background:#fef2f2;color:#991b1b;font-size:12px;line-height:1.4"></div></div></div>
 <div class="wrap">
 <div id="error" class="error"></div>
 <div class="top">
@@ -967,8 +967,8 @@ async function load(){
     renderLeads();
     $('lastUpdate').innerHTML='<span class="loading-dot"></span>Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     $('refresh').textContent='↻ Actualizar';
-  }catch(e){$('error').textContent=e.message;$('error').style.display='block';$('refresh').textContent='↻ Actualizar'}
-  finally{loading=false}
+  }catch(e){$('error').textContent=e.message;$('error').style.display='block';$('refresh').textContent='↻ Actualizar';if(!$('login').classList.contains('hide')){const hint=$('loginError');hint.textContent=e.message==='Contraseña incorrecta'?'Contraseña incorrecta. Revisá la clave o probá el panel original.':('No se pudo ingresar: '+String(e.message||'Error de conexión'));hint.style.display='block';}}
+  finally{loading=false;const btn=$('loginBtn');btn.disabled=false;btn.textContent='Ingresar'}
 }
 
 window.closeMessages=()=>{$('messagesModal').classList.add('hide')};
@@ -1124,7 +1124,7 @@ window.pay=async id=>{
   }catch(e){alert(e.message)}
 };
 
-$('loginBtn').onclick=()=>{pwd=$('password').value;sessionStorage.setItem('agency_pwd',pwd);load()};
+$('loginBtn').onclick=()=>{const btn=$('loginBtn');if(loading)return;const hint=$('loginError');hint.style.display='none';pwd=$('password').value;if(!pwd.trim()){hint.textContent='Ingresá la contraseña para continuar.';hint.style.display='block';return;}sessionStorage.setItem('agency_pwd',pwd);btn.disabled=true;btn.textContent='Verificando acceso…';load()};
 $('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
 $('refresh').onclick=()=>{load();showToast('Actualizando datos…')};
 $('days').onchange=load;
