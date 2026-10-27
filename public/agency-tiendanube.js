@@ -18,7 +18,7 @@ connect.addEventListener("click",async()=>{
 });
 async function startConnect(clientId){
  const password=sessionStorage.getItem("agency_pwd");
- const response=await fetch("/api/tiendanube",{method:"POST",headers:{"x-admin-password":password,"Content-Type":"application/json"},body:JSON.stringify({client_id:clientId})});
+ const response=await fetch("/api/health?tn=1",{method:"POST",headers:{"x-admin-password":password,"Content-Type":"application/json"},body:JSON.stringify({client_id:clientId})});
  const result=await response.json();
  if(!response.ok)throw Error(result.error||"No se pudo conectar");
  window.location.assign(result.url)
@@ -30,7 +30,7 @@ async function refresh(){
  try{
   const password=sessionStorage.getItem("agency_pwd");if(!password){content.textContent="Ingresá al panel para ver las tiendas.";return}
   const days=document.getElementById("days")?.value||"7",client=document.getElementById("clientFilter")?.value||"all";
-  const response=await fetch("/api/tiendanube?days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password}});
+  const response=await fetch("/api/health?tn=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password}});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||"No se pudo consultar Tiendanube");
   content.replaceChildren();
