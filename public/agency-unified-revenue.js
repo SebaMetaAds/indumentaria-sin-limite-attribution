@@ -19,6 +19,15 @@ function renderUnified(d,tn){
  const cancelled=success.reduce((a,s)=>a+amount(s.cancelled_orders),0);
  const gross=crmRevenue+storeRevenue,orders=crmSales+storeSales;
  const label='Tiendanube pagada + ventas CRM sin tienda conectada';
+ const home=document.getElementById("agencyHomeRevenueDetail");
+ if(home){
+  home.hidden=false;home.replaceChildren();
+  const heading=document.createElement("strong");heading.textContent="Origen de la facturación";home.append(heading);
+  const info=document.createElement("div");info.className="agency-home-revenue-items";
+  for(const [caption,value] of [["Tiendanube · pedidos pagados",fmt(storeRevenue)],["CRM · clientes sin tienda conectada",fmt(crmRevenue)],["Total consolidado",fmt(gross)]]){const el=document.createElement("div");const a=document.createElement("small");a.textContent=caption;const b=document.createElement("b");b.textContent=value;el.append(a,b);info.append(el)}home.append(info);
+  const stamp=document.createElement("small");stamp.className="agency-home-revenue-stamp";stamp.textContent="Actualizado "+new Date().toLocaleString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"})+" hs · "+tn.days+" días";home.append(stamp);
+ }
+
  const rev=document.getElementById("revenue"),revNote=document.getElementById("revenueNote"),purchases=document.getElementById("purchases");
  if(rev)rev.textContent=fmt(gross);
  if(revNote)revNote.textContent=label;
@@ -35,16 +44,17 @@ function renderUnified(d,tn){
 async function refresh(){
  const d=window.__agencyFinanceData;if(!d)return;
  const seq=++requestSeq,days=document.getElementById("days")?.value||"30",client=document.getElementById("clientFilter")?.value||"all",password=sessionStorage.getItem("agency_pwd");if(!password)return;
- if(Number(days)>90){summary.hidden=false;summary.textContent="El resumen consolidado con Tiendanube admite hasta 90 días. Elegí 7, 14, 30 o 90 días para evitar mezclar períodos distintos.";return;}
+ if(Number(days)>90){document.getElementById("agencyHomeRevenueDetail")?.setAttribute("hidden","");summary.hidden=false;summary.textContent="El resumen consolidado con Tiendanube admite hasta 90 días. Elegí 7, 14, 30 o 90 días para evitar mezclar períodos distintos.";return;}
  try{
   const r=await fetch("/api/health?tn=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password},cache:"no-store"});
   if(!r.ok)throw Error("Error consultando Tiendanube");
   const tn=await r.json();
   if(seq!==requestSeq||window.__agencyFinanceData!==d)return;
-  if(!tn.configured||!tn.stores?.length){summary.hidden=true;return}
+  if(!tn.configured||!tn.stores?.length){summary.hidden=true;document.getElementById("agencyHomeRevenueDetail")?.setAttribute("hidden","");return}
   renderUnified(d,tn);
  }catch{
   if(seq!==requestSeq)return;
+  document.getElementById("agencyHomeRevenueDetail")?.setAttribute("hidden","");
   summary.hidden=false;summary.replaceChildren();
   const msg=document.createElement("p");msg.className="agency-unified-warning";msg.textContent="No se pudo actualizar Tiendanube: se mantienen los valores originales del CRM para evitar mostrar cifras incompletas.";summary.append(msg);
  }
