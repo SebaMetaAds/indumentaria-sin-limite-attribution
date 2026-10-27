@@ -35,6 +35,7 @@ function renderUnified(d,tn){
 async function refresh(){
  const d=window.__agencyFinanceData;if(!d)return;
  const seq=++requestSeq,days=document.getElementById("days")?.value||"30",client=document.getElementById("clientFilter")?.value||"all",password=sessionStorage.getItem("agency_pwd");if(!password)return;
+ if(Number(days)>90){summary.hidden=false;summary.textContent="El resumen consolidado con Tiendanube admite hasta 90 días. Elegí 7, 14, 30 o 90 días para evitar mezclar períodos distintos.";return;}
  try{
   const r=await fetch("/api/health?tn=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password},cache:"no-store"});
   if(!r.ok)throw Error("Error consultando Tiendanube");
