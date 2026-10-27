@@ -974,6 +974,22 @@ async function load(){
 
 window.closeMessages=()=>{$('messagesModal').classList.add('hide')};
 
+const chatDateFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+const chatHourFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
+const chatDayKeyFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'});
+function validChatTime(value){if(!value)return null;const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
+function chatDateLabel(value){const d=validChatTime(value);return d?chatDateFormatter.format(d):'Fecha no disponible'}
+function chatTimeLabel(value){const d=validChatTime(value);return d?chatHourFormatter.format(d):'Hora no disponible'}
+function renderDatedMessages(messages){
+  let previous='';
+  return (messages||[]).map(m=>{
+    const d=validChatTime(m.received_at);
+    const key=d?chatDayKeyFormatter.format(d):'unknown';
+    const separator=key!==previous?'<div class="chat-day-separator"><span>'+esc(chatDateLabel(m.received_at))+'</span></div>':'';
+    previous=key;
+    return separator+renderMessageBubble(m);
+  }).join('');
+}
 function renderMessageBubble(m){
   const dir=m.direction==='outbound'?'outbound':'inbound';
   const label=dir==='outbound'?'Negocio':'Cliente';
@@ -1006,7 +1022,7 @@ function renderMessageBubble(m){
 
   const fallback=m.message_type==='interactive'?'Contenido interactivo de WhatsApp':m.message_type==='reaction'?'Reacción de WhatsApp':'['+esc(m.message_type||'mensaje')+']';
   const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">'+fallback+'</div>':'');
-  return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+new Date(m.received_at).toLocaleString('es-AR')+'</div></div></div>';
+  return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+esc(chatDateLabel(m.received_at))+' · '+esc(chatTimeLabel(m.received_at))+' hs'</div></div></div>';
 }
 
 window.transcribeMessage=async(messageId,leadId)=>{
@@ -1047,7 +1063,7 @@ window.openChat=async leadId=>{
         '</div>'+
         '<div style="padding:8px 12px">'+
           renderAiCard(lead)+
-          (msgs.length?msgs.map(renderMessageBubble).join(''):'<div class="empty-state">Todavía no hay mensajes guardados para este chat.</div>')+
+          (msgs.length?renderDatedMessages(msgs):'<div class="empty-state">Todavía no hay mensajes guardados para este chat.</div>')+
         '</div>'+
       '</div>';
   }catch(e){
@@ -1072,7 +1088,7 @@ window.openMessages=async(clientId,adId,adName)=>{
           <div class="conv-name">${esc(c.contact_name||'Sin nombre')}</div>
           <div class="conv-meta">${esc(c.phone||'')} · ${esc(c.status==='won'?'Venta':'Abierto')} · ${c.messages.length} mensaje(s)</div>
         </div>
-        ${c.messages.map(renderMessageBubble).join('')}
+        ${renderDatedMessages(c.messages)}
       </div>`).join('');
   }catch(e){
     $('messagesBody').innerHTML='<div class="empty-state bad">'+esc(e.message)+'</div>';
