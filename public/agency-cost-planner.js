@@ -11,7 +11,7 @@ const finance=window.__agencyFinanceData?.agency_finance;
 if(!finance){exportBtn.textContent="Cargá los datos financieros";return}
 const income=Number(finance.collected_this_month)||0,costs=values.reduce((a,b)=>a+b,0);
 const lines=[["Concepto","ARS"],["Cobros registrados del mes",income],["Equipo y colaboradores",values[0]],["Herramientas y software",values[1]],["Otros gastos",values[2]],["Costos totales",costs],["Saldo después de costos",income-costs],["Margen sobre cobros (%)",income>0?((income-costs)*100/income).toFixed(2):"No disponible"],["Nota","Simulación no contable. No incluye todos los impuestos ni ajustes."]];
-const csv="\\uFEFF"+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\\r\\n");
+const csv="\uFEFF"+lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
 const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));const link=document.createElement("a");link.href=url;link.download="simulacion-costos-agencia.csv";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 render()})();
