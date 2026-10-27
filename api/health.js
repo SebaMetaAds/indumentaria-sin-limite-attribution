@@ -81,7 +81,7 @@ async function handleTiendaNube(req,res){
   }
   if(req.method!=='GET')return sendJson(res,405,{error:'Método no permitido'});
   try{
-    const days=Math.max(1,Math.min(30,Number(req.query?.days)||7));
+    const days=Math.max(1,Math.min(90,Number(req.query?.days)||30));
     const clientId=String(req.query?.client_id||'all');
     const dbStores=await loadTnConnections(clientId);
     const stores=dbStores.length?dbStores.map(s=>({client_id:s.client_id,store_id:s.store_id,name:'Tienda '+s.store_id,access_token:decryptTn(s.access_token_enc)})):config().filter(s=>clientId==='all'||s.client_id===clientId);
