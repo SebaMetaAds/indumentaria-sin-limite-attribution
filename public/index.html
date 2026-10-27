@@ -157,7 +157,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="payment">Pagos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="payment">Pagos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Último mensaje</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -889,6 +889,15 @@ function setLeadFilter(filter,scroll=false){
   if(scroll) focusSection('leadsSection');
 }
 
+const crmDateFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',year:'numeric'});
+const crmTimeFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
+function crmLastMessageDate(lead){
+  const value=lead.last_message_at||lead.first_message_at||lead.created_at;
+  if(!value)return '<span class="muted">Sin fecha</span>';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '<span class="muted">Sin fecha</span>';
+  return '<div class="crm-date-cell"><strong>'+crmDateFormatter.format(date)+'</strong><small>'+crmTimeFormatter.format(date)+' hs</small></div>';
+}
 function renderLeads(){
   if(!data)return;
   const q=($('leadSearch')?.value||'').trim().toLowerCase();
@@ -917,11 +926,12 @@ function renderLeads(){
       : '<button class="btn btn-dark" onclick="openSaleModal(\''+l.id+'\')">Venta</button>';
     return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
     <td>${l.ctwa_clid?'<span class="good">Meta Ads</span>':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
+    <td>${crmLastMessageDate(l)}</td>
     <td>${stageBadge(stage)}${l.assigned_to?'<div class="entity-id">'+esc(l.assigned_to)+'</div>':''}</td>
     <td>${l.ai_score!=null?'<span class="ai-score '+aiScoreClass(l.ai_score)+'">'+Number(l.ai_score)+'/100</span>':'<button class="btn btn-light" onclick="analyzeLead(\''+l.id+'\')">Analizar</button>'}</td>
     <td>${esc(follow)}</td><td>${saleCell}</td>
     <td><button class="btn btn-light" onclick="openChat('${l.id}')">Chat</button> <button class="btn btn-light" onclick="manageLead('${l.id}')">Gestionar</button> ${saleAction}</td></tr>`
-  }).join('')||'<tr><td colspan="10" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
+  }).join('')||'<tr><td colspan="11" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
 }
 
 async function load(){
