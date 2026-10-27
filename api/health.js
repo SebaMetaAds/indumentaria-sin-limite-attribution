@@ -27,7 +27,7 @@ async function requestOrders(store,days){
     url.searchParams.set('page',String(page));
     url.searchParams.set('created_at_min',start.toISOString());
     url.searchParams.set('created_at_max',now.toISOString());
-    const response=await fetch(url,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics (contacto@agencia.local)','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
+    const response=await fetch(url,{headers:{Authentication:'bearer '+store.access_token,'User-Agent':'Agencia Analytics (support@agency.example)','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
     if(!response.ok)throw new Error('Tiendanube respondió HTTP '+response.status);
     const batch=await response.json();
     if(!Array.isArray(batch))throw new Error('Respuesta de pedidos inválida');
