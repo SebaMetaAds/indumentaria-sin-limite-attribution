@@ -32,7 +32,7 @@ async function refresh(){
  try{
   const password=sessionStorage.getItem("agency_pwd");if(!password){content.textContent="Ingresá al panel para ver las tiendas.";return}
   const days=period.value||"30",client=document.getElementById("clientFilter")?.value||"all";
-  const response=await fetch("/api/health?tn=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password}});
+  const response=await fetch("/api/health?tn=1&compare=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password}});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error||"No se pudo consultar Tiendanube");
   content.replaceChildren();
@@ -43,7 +43,7 @@ async function refresh(){
     const sub=document.createElement("small");sub.textContent="Tienda #"+store.store_id+" · "+(store.status==="connected"?"Sincronización consultada":"Error al sincronizar");
     card.append(title,sub);
     if(store.status!=="connected"){const err=document.createElement("p");err.textContent=store.error||"No se pudo cargar";card.append(err)}
-    else{const grid=document.createElement("div");grid.className="tn-grid";for(const [name,value] of [["Pedidos",store.orders],["Pagados",store.paid_orders],["Pendientes",store.pending_orders],["Cancelados",store.cancelled_orders],["% cancelaciones",store.orders?((store.cancelled_orders/store.orders)*100).toFixed(1)+"%":"0%"],["Facturación pagada",money(store.paid_revenue,store.currency)],["Ticket promedio",money(store.average_paid_ticket,store.currency)]]){const metric=document.createElement("div");const label=document.createElement("span");label.textContent=name;const v=document.createElement("b");v.textContent=value;metric.append(label,v);grid.append(metric)}card.append(grid)}
+    else{const grid=document.createElement("div");grid.className="tn-grid";for(const [name,value] of [["Pedidos",store.orders],["Pagados",store.paid_orders],["Pendientes",store.pending_orders],["Cancelados",store.cancelled_orders],["% cancelaciones",store.orders?((store.cancelled_orders/store.orders)*100).toFixed(1)+"%":"0%"],["Facturación pagada",money(store.paid_revenue,store.currency)],["Período anterior",store.previous_paid_revenue==null?"—":money(store.previous_paid_revenue,store.currency)],["Variación facturación",store.previous_paid_revenue==null?"—":store.previous_paid_revenue>0?(((store.paid_revenue-store.previous_paid_revenue)/store.previous_paid_revenue)*100).toFixed(1)+"%":store.paid_revenue>0?"Sin base anterior":"0%"],["Ticket promedio",money(store.average_paid_ticket,store.currency)]]){const metric=document.createElement("div");const label=document.createElement("span");label.textContent=name;const v=document.createElement("b");v.textContent=value;metric.append(label,v);grid.append(metric)}card.append(grid)}
     content.append(card)
   }
  }catch(e){content.textContent="No se pudieron cargar las tiendas: "+String(e.message||"Error")}finally{button.disabled=false;button.textContent="Actualizar tiendas"}
