@@ -1,0 +1,30 @@
+/* Non-destructive real dashboard enhancement. Existing selectors and handlers preserved. */
+:root{--agency-accent:#7568ee;--agency-ring:rgba(117,104,238,.19)}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 90% -12%,#e8e6ff 0%,transparent 32%),#f6f7fb}
+.agency-sidebar{position:fixed;top:0;bottom:0;left:0;width:220px;z-index:7;background:linear-gradient(170deg,#121a31,#1b1e3a);color:#d0d4e6;padding:23px 13px;display:flex;flex-direction:column;gap:8px;box-shadow:8px 0 30px #171d3212}
+.agency-logo{display:flex;align-items:center;gap:10px;color:white;font-weight:800;font-size:14px;letter-spacing:.02em;padding:5px 9px 25px}
+.agency-logo-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:11px;background:#7468eb;color:white;font-weight:900}
+.agency-nav-label{color:#8994ad;font-size:10px;padding:0 12px 5px;letter-spacing:.12em}
+.agency-nav{display:flex;flex-direction:column;gap:4px}
+.agency-nav button{background:transparent;color:#b0bad0;border:0;border-radius:10px;padding:11px 12px;display:flex;align-items:center;gap:11px;text-align:left;font-size:12px;font-weight:650;cursor:pointer;transition:background .2s,transform .2s,color .2s}
+.agency-nav button:hover{background:#283251;color:#fff;transform:translateX(3px)}
+.agency-nav button.active{background:#5f56c7;color:#fff}
+.agency-nav button .agency-symbol{font-size:17px;min-width:20px;text-align:center}
+.agency-sidebar-footer{margin-top:auto;color:#abb4cc;font-size:10px;background:#ffffff0d;padding:12px;border-radius:11px;line-height:1.5}
+.agency-menu-toggle{display:none}
+body.agency-enhanced>.wrap{margin-left:220px;max-width:none;padding:24px 26px}
+body.agency-enhanced .top{top:12px;border-radius:17px;border:1px solid #e9e9f4;box-shadow:0 12px 30px #2527560c}
+body.agency-enhanced .brand h1{letter-spacing:-.035em;font-size:23px}
+body.agency-enhanced .card{border-radius:15px;transition:transform .25s,border-color .25s,box-shadow .25s;position:relative;isolation:isolate}
+body.agency-enhanced .card.interactive:hover{transform:translateY(-5px);border-color:#aea6f6;box-shadow:0 17px 35px var(--agency-ring)}
+body.agency-enhanced .section{border-radius:16px;box-shadow:0 6px 25px #151a3009}
+body.agency-enhanced .section:target{scroll-margin-top:120px;box-shadow:0 0 0 2px #7568ee66}
+body.agency-enhanced .controls .primary{background:#6c60d9;border-color:#6c60d9}
+body.agency-enhanced .controls button:hover{transform:translateY(-1px)}
+.agency-backtop{position:fixed;bottom:22px;right:22px;z-index:8;background:#6a5ee0;color:white;border:0;border-radius:50%;height:44px;width:44px;box-shadow:0 9px 22px #564ac657;cursor:pointer;display:none}
+.agency-backtop.visible{display:block}
+.agency-backdrop{display:none}
+@media(max-width:1180px){.agency-sidebar{width:185px}body.agency-enhanced>.wrap{margin-left:185px;padding:18px}.agency-logo{font-size:12px}}
+@media(max-width:900px){.agency-sidebar{transform:translateX(-102%);transition:transform .25s;width:245px;z-index:15}.agency-sidebar.open{transform:translateX(0)}.agency-menu-toggle{display:block;position:fixed;left:12px;bottom:18px;z-index:10;border:0;border-radius:12px;background:#6c60db;color:white;padding:12px 15px;font-weight:800;box-shadow:0 8px 24px #0002}body.agency-enhanced>.wrap{margin-left:0;padding:15px}.agency-backdrop.open{display:block;position:fixed;inset:0;background:#0009;z-index:14}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.agency-sidebar,.agency-nav button,body.agency-enhanced .card{transition:none!important}}
