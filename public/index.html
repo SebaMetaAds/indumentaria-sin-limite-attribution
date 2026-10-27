@@ -901,6 +901,8 @@ function crmLastMessageDate(lead){
 }
 function renderLeads(){
   if(!data)return;
+  const activityFilter=document.getElementById('crmActivityFilter')?.value||'all';
+  const sortOrder=document.getElementById('crmActivitySort')?.value||'recent';
   const q=($('leadSearch')?.value||'').trim().toLowerCase();
   let rows=[...(data.leads||[])];
   rows=rows.filter(l=>{
@@ -915,6 +917,22 @@ function renderLeads(){
     if(leadFilter==='open'&&['won','lost'].includes(stage))return false;
     if(!q)return true;
     return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text,l.follow_up_note].some(v=>String(v||'').toLowerCase().includes(q));
+  });
+  const now=Date.now();
+  rows=rows.filter(l=>{
+    if(activityFilter==='all')return true;
+    const timestamp=Date.parse(l.last_message_at||l.first_message_at||l.created_at||'');
+    if(!Number.isFinite(timestamp))return false;
+    const age=Math.max(0,now-timestamp);
+    if(activityFilter==='today')return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(timestamp))===new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now));
+    if(activityFilter==='24h')return age<=86400000;
+    if(activityFilter==='stale')return age>172800000;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const x=Date.parse(a.last_message_at||a.first_message_at||a.created_at||'')||0;
+    const y=Date.parse(b.last_message_at||b.first_message_at||b.created_at||'')||0;
+    return sortOrder==='oldest'?x-y:y-x;
   });
   $('leadsCount').textContent=rows.length+' conversación'+(rows.length===1?'':'es');
   $('leadsBody').innerHTML=rows.map(l=>{
