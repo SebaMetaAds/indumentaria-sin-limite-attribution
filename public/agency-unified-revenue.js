@@ -26,6 +26,23 @@ function renderUnified(d,tn){
   const info=document.createElement("div");info.className="agency-home-revenue-items";
   for(const [caption,value] of [["Tiendanube · pedidos pagados",fmt(storeRevenue)],["CRM · clientes sin tienda conectada",fmt(crmRevenue)],["Total consolidado",fmt(gross)]]){const el=document.createElement("div");const a=document.createElement("small");a.textContent=caption;const b=document.createElement("b");b.textContent=value;el.append(a,b);info.append(el)}home.append(info);
   const stamp=document.createElement("small");stamp.className="agency-home-revenue-stamp";stamp.textContent="Actualizado "+new Date().toLocaleString("es-AR",{hour:"2-digit",minute:"2-digit",timeZone:"America/Argentina/Buenos_Aires"})+" hs · "+tn.days+" días";home.append(stamp);
+  const byClient=document.createElement("section");byClient.className="agency-home-clients";
+  const h=document.createElement("strong");h.textContent="Resultados por cliente";byClient.append(h);
+  const rows=document.createElement("div");rows.className="agency-home-client-grid";
+  const names=new Map((d.clients||[]).map(c=>[String(c.id),c.name]));
+  const mapped=new Map();
+  for(const store of success){const id=String(store.client_id),row=mapped.get(id)||{name:names.get(id)||store.name||"Tienda "+store.store_id,revenue:0,orders:0,previous:0,hasPrevious:false,source:"Tiendanube"};row.revenue+=amount(store.paid_revenue);row.orders+=amount(store.paid_orders);if(store.previous_paid_revenue!=null){row.previous+=amount(store.previous_paid_revenue);row.hasPrevious=true}mapped.set(id,row)}
+  for(const c of crm){mapped.set(String(c.id),{name:c.name,revenue:amount(c.revenue),orders:amount(c.purchases),source:"CRM",hasPrevious:false})}
+  const sorted=[...mapped.values()].sort((a,b)=>b.revenue-a.revenue);
+  for(const row of sorted){const item=document.createElement("article");item.className="agency-home-client-item";
+   const name=document.createElement("strong");name.textContent=row.name;const source=document.createElement("small");source.textContent=row.source;
+   const total=document.createElement("b");total.textContent=fmt(row.revenue);
+   const ordersText=document.createElement("span");ordersText.textContent=nfmt(row.orders)+" ventas";
+   const trend=document.createElement("small");trend.className="agency-home-client-trend";
+   trend.textContent=!row.hasPrevious?"Sin comparación disponible":row.previous===0?(row.revenue>0?"Sin base anterior":"Sin variación"):((row.revenue-row.previous)/row.previous*100>=0?"+":"")+((row.revenue-row.previous)/row.previous*100).toFixed(1)+"% vs. período anterior";
+   item.append(name,source,total,ordersText,trend);rows.append(item)}
+  if(!sorted.length){const none=document.createElement("p");none.textContent="Todavía no hay resultados para este período.";rows.append(none)}
+  byClient.append(rows);home.append(byClient);
  }
 
  const rev=document.getElementById("revenue"),revNote=document.getElementById("revenueNote"),purchases=document.getElementById("purchases");
@@ -46,7 +63,7 @@ async function refresh(){
  const seq=++requestSeq,days=document.getElementById("days")?.value||"30",client=document.getElementById("clientFilter")?.value||"all",password=sessionStorage.getItem("agency_pwd");if(!password)return;
  if(Number(days)>90){document.getElementById("agencyHomeRevenueDetail")?.setAttribute("hidden","");summary.hidden=false;summary.textContent="El resumen consolidado con Tiendanube admite hasta 90 días. Elegí 7, 14, 30 o 90 días para evitar mezclar períodos distintos.";return;}
  try{
-  const r=await fetch("/api/health?tn=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password},cache:"no-store"});
+  const r=await fetch("/api/health?tn=1&compare=1&days="+encodeURIComponent(days)+"&client_id="+encodeURIComponent(client),{headers:{"x-admin-password":password},cache:"no-store"});
   if(!r.ok)throw Error("Error consultando Tiendanube");
   const tn=await r.json();
   if(seq!==requestSeq||window.__agencyFinanceData!==d)return;
