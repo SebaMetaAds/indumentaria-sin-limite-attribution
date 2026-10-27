@@ -1,0 +1,9 @@
+/* WhatsApp conversation chronology */
+.chat-day-separator{display:flex;justify-content:center;align-items:center;margin:16px 10px 12px;gap:12px}
+.chat-day-separator:before,.chat-day-separator:after{content:"";height:1px;background:#e7eaf0;flex:1}
+.chat-day-separator span{font-size:11px;font-weight:750;color:#685fc3;background:#f1efff;border:1px solid #e3deff;padding:7px 12px;border-radius:999px;text-align:center;text-transform:capitalize}
+.msg-time{font-variant-numeric:tabular-nums;line-height:1.5;font-size:10px!important;color:#667085!important;text-align:right;margin-top:7px!important}
+.agency-dark .chat-day-separator:before,.agency-dark .chat-day-separator:after{background:#444b64}
+.agency-dark .chat-day-separator span{background:#343052;color:#d5cfff;border-color:#4e4676}
+.agency-dark .msg-time{color:#c5c9d7!important}
+@media(max-width:680px){.chat-day-separator span{font-size:10px;padding:6px 8px}.msg-time{font-size:9px!important}}
