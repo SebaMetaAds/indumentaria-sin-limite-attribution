@@ -1,4 +1,5 @@
 import { sendJson, requireAdmin } from '../lib/http.js';
+import {loadTnConnections,decryptTn} from '../lib/tiendanube-connections.js';
 const num=v=>Number(v)||0;
 function config(){
   let stores=[];
@@ -39,8 +40,10 @@ export default async function handler(req,res){
   try{
     const days=Math.max(1,Math.min(30,Number(req.query?.days)||7));
     const clientId=String(req.query?.client_id||'all');
-    const stores=config().filter(s=>clientId==='all'||s.client_id===clientId).slice(0,12);
-    const results=await Promise.all(stores.map(async s=>{
+    const dbStores=await loadTnConnections(clientId);
+    const stores=dbStores.length?dbStores.map(s=>({client_id:s.client_id,store_id:s.store_id,name:'Tienda '+s.store_id,access_token:decryptTn(s.access_token_enc)})):config().filter(s=>clientId==='all'||s.client_id===clientId);
+    const selected=stores.slice(0,12);
+    const results=await Promise.all(selected.map(async s=>{
       try{const orders=await requestOrders(s,days);return {client_id:s.client_id,store_id:String(s.store_id),name:String(s.name||'Tiendanube'),status:'connected',...summarize(orders)}}
       catch(e){return {client_id:s.client_id,store_id:String(s.store_id),name:String(s.name||'Tiendanube'),status:'error',error:String(e.message||'Error consultando tienda')}}
     }));
