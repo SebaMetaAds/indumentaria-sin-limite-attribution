@@ -41,9 +41,29 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 @media(max-width:1000px){.today-grid{grid-template-columns:1fr}.today-finance{grid-template-columns:repeat(2,1fr)}.profile-kpis{grid-template-columns:repeat(2,1fr)}.compare-grid{grid-template-columns:repeat(2,1fr)}.sales-center-grid{grid-template-columns:1fr}}
 @media(max-width:850px){.top{position:static}.section-tools{width:100%;margin-left:0}.search{min-width:0;flex:1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+<link rel="stylesheet" href="/agency-upgrade.css">
+<link rel="stylesheet" href="/agency-tables.css">
+<link rel="stylesheet" href="/agency-productivity.css">
+<link rel="stylesheet" href="/agency-chat-dates.css">
+<link rel="stylesheet" href="/agency-crm-date.css">
+<link rel="stylesheet" href="/agency-crm-activity.css">
+<link rel="stylesheet" href="/agency-crm-summary.css">
+<link rel="stylesheet" href="/agency-whatsapp-fallback.css">
+<link rel="stylesheet" href="/agency-crm-actions.css">
+<link rel="stylesheet" href="/agency-priorities.css">
+<link rel="stylesheet" href="/agency-ads-control.css">
+<link rel="stylesheet" href="/agency-ranking.css">
+<link rel="stylesheet" href="/agency-finance.css">
+<link rel="stylesheet" href="/agency-cost-planner.css">
+<link rel="stylesheet" href="/agency-tiendanube.css">
+<link rel="stylesheet" href="/agency-unified-revenue.css">
+<link rel="stylesheet" href="/agency-tiendanube-chart.css">
+<link rel="stylesheet" href="/agency-tiendanube-compare.css">
+<style id="agency-client-report-style">.agency-report-dialog{margin:14px 0;padding:14px;background:#faf9ff;border:1px solid #ddd5f6;border-radius:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.agency-report-dialog strong{color:#443987;font-size:13px}.agency-report-dialog select,.agency-report-dialog button{border:1px solid #d8d0f2;border-radius:9px;padding:9px 12px;background:white}.agency-report-dialog button{background:#6757bd;color:white;cursor:pointer}.agency-report-dialog button:disabled{opacity:.5}.agency-report-dialog small{flex-basis:100%;font-size:11px;color:#726986}</style>
+<style id="agency-client-editor-style">.agency-client-edit{margin:14px 0;padding:18px;background:#fff;border:1px solid #ded9f1;border-radius:13px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}.agency-client-edit>strong{color:#3f3489}.agency-client-edit>select{padding:10px;border:1px solid #d4cdef;border-radius:8px}.agency-client-edit-grid{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.agency-client-edit-grid label{display:flex;flex-direction:column;gap:5px;font-size:11px;color:#666}.agency-client-edit-grid input,.agency-client-edit-grid textarea{width:100%;border:1px solid #d8d4e9;border-radius:8px;padding:10px;font:inherit}.agency-client-edit-grid textarea{min-height:70px}.agency-client-edit-note{font-size:11px;color:#6c6787;width:100%}.agency-client-edit>button{border:none;border-radius:8px;background:#6654c6;color:#fff;padding:10px 14px;cursor:pointer}.agency-client-edit>button:disabled{opacity:.6}.agency-client-edit>small{width:100%}@media(max-width:700px){.agency-client-edit-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
-<div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña"><button id="loginBtn">Ingresar</button></div></div>
+<div id="login" class="login"><div class="login-card"><h2>Panel de Agencia</h2><p>Ingresá la clave del dashboard.</p><input id="password" type="password" placeholder="Contraseña" autocomplete="current-password"><button id="loginBtn" type="button">Ingresar</button><div id="loginError" role="alert" aria-live="polite" style="display:none;margin-top:12px;padding:11px 12px;border-radius:9px;background:#fef2f2;color:#991b1b;font-size:12px;line-height:1.4"></div></div></div>
 <div class="wrap">
 <div id="error" class="error"></div>
 <div class="top">
@@ -153,7 +173,7 @@ tbody tr{transition:background .15s}tbody tr:hover{background:#f8fafc}
 
 <div class="section" id="adsSection"><div class="section-head"><div class="section-title"><h2>Rendimiento por anuncio</h2><span id="adsCount" class="table-count"></span></div><div class="section-tools"><input id="adSearch" class="search" placeholder="Buscar campaña, conjunto o anuncio"><select id="adSort" class="mini-select"><option value="spend">Mayor gasto</option><option value="leads">Más chats</option><option value="purchases">Más ventas</option><option value="roas">Mayor ROAS</option></select><span class="badge">Datos Meta</span></div></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Estructura</th><th>Gasto</th><th>Chats</th><th>Mensajes</th><th>Ventas</th><th>Facturación</th><th>CPA</th><th>ROAS</th><th>Cierre</th></tr></thead><tbody id="adsBody"></tbody></table></div></div>
 
-<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="payment">Pagos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
+<div class="section" id="leadsSection"><div class="section-head"><div class="section-title"><h2>Conversaciones recientes</h2><span id="leadsCount" class="table-count"></span></div><div class="section-tools"><input id="leadSearch" class="search" placeholder="Buscar nombre, teléfono o anuncio"><div class="chips" id="leadChips"><button class="chip active" data-filter="all">Todos</button><button class="chip" data-filter="ads">Meta Ads</button><button class="chip" data-filter="organic">Orgánico</button><button class="chip" data-filter="open">Abiertos</button><button class="chip" data-filter="followup">Seguimientos</button><button class="chip" data-filter="ai">Oportunidades</button><button class="chip" data-filter="payment">Pagos</button><button class="chip" data-filter="won">Ventas</button><button class="chip" data-filter="lost">Perdidos</button></div></div></div><div class="table-wrap"><table><thead><tr><th>Negocio</th><th>Cliente</th><th>WhatsApp</th><th>Origen</th><th>Campaña / anuncio</th><th>Último mensaje</th><th>Etapa</th><th>IA</th><th>Seguimiento</th><th>Venta</th><th>Acciones</th></tr></thead><tbody id="leadsBody"></tbody></table></div></div>
 </div>
 <div id="toast" class="toast"></div>
 
@@ -819,6 +839,8 @@ window.toggleAdset=key=>{
 
 function renderAds(){
   if(!data)return;
+  window.__agencyAdsSnapshot=data;
+  window.dispatchEvent(new Event('agency:ads-data'));
   const q=($('adSearch')?.value||'').trim().toLowerCase();
   const sort=$('adSort')?.value||'spend';
   let rows=[...(data.by_ad||[])];
@@ -886,8 +908,21 @@ function setLeadFilter(filter,scroll=false){
   if(scroll) focusSection('leadsSection');
 }
 
+const crmDateFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',day:'2-digit',month:'2-digit',year:'numeric'});
+const crmTimeFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
+function crmLastMessageDate(lead){
+  const value=lead.last_message_at||lead.first_message_at||lead.created_at;
+  if(!value)return '<span class="muted">Sin fecha</span>';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '<span class="muted">Sin fecha</span>';
+  return '<div class="crm-date-cell"><strong>'+crmDateFormatter.format(date)+'</strong><small>'+crmTimeFormatter.format(date)+' hs</small></div>';
+}
 function renderLeads(){
   if(!data)return;
+  window.__agencyCrmSnapshot=data.leads||[];
+  window.dispatchEvent(new Event('agency:crm-data'));
+  const activityFilter=document.getElementById('crmActivityFilter')?.value||'all';
+  const sortOrder=document.getElementById('crmActivitySort')?.value||'recent';
   const q=($('leadSearch')?.value||'').trim().toLowerCase();
   let rows=[...(data.leads||[])];
   rows=rows.filter(l=>{
@@ -903,6 +938,22 @@ function renderLeads(){
     if(!q)return true;
     return [l.contact_name,l.phone,l.client_name,l.meta_campaign_name,l.meta_adset_name,l.meta_ad_name,l.referral_headline,l.last_message_text,l.follow_up_note].some(v=>String(v||'').toLowerCase().includes(q));
   });
+  const now=Date.now();
+  rows=rows.filter(l=>{
+    if(activityFilter==='all')return true;
+    const timestamp=Date.parse(l.last_message_at||l.first_message_at||l.created_at||'');
+    if(!Number.isFinite(timestamp))return false;
+    const age=Math.max(0,now-timestamp);
+    if(activityFilter==='today')return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(timestamp))===new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now));
+    if(activityFilter==='24h')return age<=86400000;
+    if(activityFilter==='stale')return age>172800000;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    const x=Date.parse(a.last_message_at||a.first_message_at||a.created_at||'')||0;
+    const y=Date.parse(b.last_message_at||b.first_message_at||b.created_at||'')||0;
+    return sortOrder==='oldest'?x-y:y-x;
+  });
   $('leadsCount').textContent=rows.length+' conversación'+(rows.length===1?'':'es');
   $('leadsBody').innerHTML=rows.map(l=>{
     const saleRows=l.sales||[];
@@ -914,11 +965,12 @@ function renderLeads(){
       : '<button class="btn btn-dark" onclick="openSaleModal(\''+l.id+'\')">Venta</button>';
     return `<tr><td><b>${esc(l.client_name)}</b></td><td>${esc(l.contact_name||'Sin nombre')}</td><td>${esc(l.phone)}</td>
     <td>${l.ctwa_clid?'<span class="good">Meta Ads</span>':'Orgánico'}</td><td>${esc([l.meta_campaign_name,l.meta_ad_name||l.referral_headline].filter(Boolean).join(' / ')||'—')}</td>
+    <td>${crmLastMessageDate(l)}</td>
     <td>${stageBadge(stage)}${l.assigned_to?'<div class="entity-id">'+esc(l.assigned_to)+'</div>':''}</td>
     <td>${l.ai_score!=null?'<span class="ai-score '+aiScoreClass(l.ai_score)+'">'+Number(l.ai_score)+'/100</span>':'<button class="btn btn-light" onclick="analyzeLead(\''+l.id+'\')">Analizar</button>'}</td>
     <td>${esc(follow)}</td><td>${saleCell}</td>
     <td><button class="btn btn-light" onclick="openChat('${l.id}')">Chat</button> <button class="btn btn-light" onclick="manageLead('${l.id}')">Gestionar</button> ${saleAction}</td></tr>`
-  }).join('')||'<tr><td colspan="10" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
+  }).join('')||'<tr><td colspan="11" class="muted">No hay conversaciones que coincidan con el filtro.</td></tr>';
 }
 
 async function load(){
@@ -929,6 +981,8 @@ async function load(){
     $('refresh').textContent='Actualizando…';
     const client=$('clientFilter').value||'all';
     data=await api(`/api/dashboard?days=${$('days').value}&client_id=${encodeURIComponent(client)}`);
+    window.__agencyFinanceData=data;
+    window.dispatchEvent(new Event('agency:finance-data'));
     $('login').classList.add('hide');
     renderClientFilter(data.clients||[]);
     setStatus(data.configured);
@@ -966,12 +1020,44 @@ async function load(){
     renderLeads();
     $('lastUpdate').innerHTML='<span class="loading-dot"></span>Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     $('refresh').textContent='↻ Actualizar';
-  }catch(e){$('error').textContent=e.message;$('error').style.display='block';$('refresh').textContent='↻ Actualizar'}
-  finally{loading=false}
+  }catch(e){$('error').textContent=e.message;$('error').style.display='block';$('refresh').textContent='↻ Actualizar';if(!$('login').classList.contains('hide')){const hint=$('loginError');hint.textContent=e.message==='Contraseña incorrecta'?'Contraseña incorrecta. Revisá la clave o probá el panel original.':('No se pudo ingresar: '+String(e.message||'Error de conexión'));hint.style.display='block';}}
+  finally{loading=false;const btn=$('loginBtn');btn.disabled=false;btn.textContent='Ingresar'}
 }
 
 window.closeMessages=()=>{$('messagesModal').classList.add('hide')};
 
+const chatDateFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+const chatHourFormatter=new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hour:'2-digit',minute:'2-digit',hour12:false});
+const chatDayKeyFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'});
+function validChatTime(value){if(!value)return null;const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
+function chatDateLabel(value){const d=validChatTime(value);return d?chatDateFormatter.format(d):'Fecha no disponible'}
+function chatTimeLabel(value){const d=validChatTime(value);return d?chatHourFormatter.format(d):'Hora no disponible'}
+function renderDatedMessages(messages){
+  let previous='';
+  return (messages||[]).map(m=>{
+    const d=validChatTime(m.received_at);
+    const key=d?chatDayKeyFormatter.format(d):'unknown';
+    const separator=key!==previous?'<div class="chat-day-separator"><span>'+esc(chatDateLabel(m.received_at))+'</span></div>':'';
+    previous=key;
+    return separator+renderMessageBubble(m);
+  }).join('');
+}
+function whatsappUnsupportedLabel(m){
+  const kind=String(m?.message_type||'').toLowerCase();
+  const labels={
+    unsupported:'Mensaje no compatible con la API de WhatsApp',
+    unknown:'Tipo de mensaje no reconocido por WhatsApp',
+    location:'Ubicación compartida (no disponible en este visor)',
+    contacts:'Contacto compartido (no disponible en este visor)',
+    order:'Pedido de catálogo (contenido no disponible)',
+    system:'Notificación del sistema de WhatsApp',
+    ephemeral:'Mensaje temporal de WhatsApp'
+  };
+  return labels[kind]||'Contenido no disponible en este visor';
+}
+function isUnsupportedWhatsAppText(value){
+  return /^\\s*\\[?unsupported\\]?\\s*$/i.test(String(value||''));
+}
 function renderMessageBubble(m){
   const dir=m.direction==='outbound'?'outbound':'inbound';
   const label=dir==='outbound'?'Negocio':'Cliente';
@@ -1010,8 +1096,12 @@ function renderMessageBubble(m){
   }
 
   const fallback=m.message_type==='interactive'?'Contenido interactivo de WhatsApp':m.message_type==='reaction'?'Reacción de WhatsApp':'['+esc(m.message_type||'mensaje')+']';
-  const text=m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>':(!media?'<div class="msg-text">'+fallback+'</div>':'');
-  return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+new Date(m.received_at).toLocaleString('es-AR')+'</div></div></div>';
+  const unsupported=isUnsupportedWhatsAppText(m.message_text)||['unsupported','unknown'].includes(String(m.message_type||'').toLowerCase());
+  const text=unsupported
+    ? '<div class="msg-text whatsapp-unsupported"><strong>ⓘ '+esc(whatsappUnsupportedLabel(m))+'</strong><small>WhatsApp no proporcionó un contenido legible para este mensaje. Podés consultarlo desde WhatsApp si está disponible.</small></div>'
+    : m.message_text?'<div class="msg-text">'+esc(m.message_text)+'</div>'
+    : (!media?'<div class="msg-text whatsapp-unsupported">'+esc(whatsappUnsupportedLabel(m))+'</div>':'');
+  return '<div class="msg-row '+dir+'"><div class="bubble"><div class="msg-label">'+label+'</div>'+media+text+'<div class="msg-time">'+esc(chatDateLabel(m.received_at))+' · '+esc(chatTimeLabel(m.received_at))+' hs</div></div></div>';
 }
 
 window.transcribeMessage=async(messageId,leadId)=>{
@@ -1052,7 +1142,7 @@ window.openChat=async leadId=>{
         '</div>'+
         '<div style="padding:8px 12px">'+
           renderAiCard(lead)+
-          (msgs.length?msgs.map(renderMessageBubble).join(''):'<div class="empty-state">Todavía no hay mensajes guardados para este chat.</div>')+
+          (msgs.length?renderDatedMessages(msgs):'<div class="empty-state">Todavía no hay mensajes guardados para este chat.</div>')+
         '</div>'+
       '</div>';
   }catch(e){
@@ -1077,7 +1167,7 @@ window.openMessages=async(clientId,adId,adName)=>{
           <div class="conv-name">${esc(c.contact_name||'Sin nombre')}</div>
           <div class="conv-meta">${esc(c.phone||'')} · ${esc(c.status==='won'?'Venta':'Abierto')} · ${c.messages.length} mensaje(s)</div>
         </div>
-        ${c.messages.map(renderMessageBubble).join('')}
+        ${renderDatedMessages(c.messages)}
       </div>`).join('');
   }catch(e){
     $('messagesBody').innerHTML='<div class="empty-state bad">'+esc(e.message)+'</div>';
@@ -1130,7 +1220,7 @@ window.pay=async id=>{
   }catch(e){alert(e.message)}
 };
 
-$('loginBtn').onclick=()=>{pwd=$('password').value;sessionStorage.setItem('agency_pwd',pwd);load()};
+$('loginBtn').onclick=()=>{const btn=$('loginBtn');if(loading)return;const hint=$('loginError');hint.style.display='none';pwd=$('password').value;if(!pwd.trim()){hint.textContent='Ingresá la contraseña para continuar.';hint.style.display='block';return;}sessionStorage.setItem('agency_pwd',pwd);btn.disabled=true;btn.textContent='Verificando acceso…';load()};
 $('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click()});
 $('refresh').onclick=()=>{load();showToast('Actualizando datos…')};
 $('days').onchange=load;
@@ -1154,4 +1244,22 @@ $('autoRefresh').onclick=()=>{
 };
 if(pwd)load();
 </script>
+<script src="/agency-tiendanube-chart.js" defer></script>
+<script src="/agency-tiendanube-compare.js" defer></script>
+<script src="/agency-tiendanube.js" defer></script>
+<script src="/agency-upgrade.js" defer></script>
+<script src="/agency-tables.js" defer></script>
+<script src="/agency-productivity.js" defer></script>
+<script src="/agency-crm-activity.js" defer></script>
+<script src="/agency-crm-summary.js" defer></script>
+<script src="/agency-crm-actions.js" defer></script>
+<script src="/agency-priorities.js" defer></script>
+<script src="/agency-ads-control.js" defer></script>
+<script src="/agency-ranking.js" defer></script>
+<script src="/agency-finance.js" defer></script>
+<script src="/agency-cost-planner.js" defer></script>
+
+<script src="/agency-unified-revenue.js" defer></script>
+<script src="/agency-client-reports.js" defer></script>
+<script src="/agency-client-editor.js" defer></script>
 </body></html>
