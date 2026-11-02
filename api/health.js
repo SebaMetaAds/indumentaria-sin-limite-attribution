@@ -28,7 +28,7 @@ async function requestOrders(store,days,offsetDays=0){
     url.searchParams.set('created_at_min',start.toISOString());
     url.searchParams.set('created_at_max',now.toISOString());
     const response=await fetch(url,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
-    if(!response.ok)throw new Error('Tiendanube respondió HTTP '+response.status);
+    if(!response.ok)throw new Error('Tiendanube HTTP '+response.status+' al consultar pedidos (página '+page+'). Revisar tienda, versión de API y autorización.');
     const batch=await response.json();
     if(!Array.isArray(batch))throw new Error('Respuesta de pedidos inválida');
     orders.push(...batch);
