@@ -27,7 +27,8 @@ async function requestOrders(store,days,offsetDays=0){
     url.searchParams.set('page',String(page));
     url.searchParams.set('created_at_min',start.toISOString());
     url.searchParams.set('created_at_max',now.toISOString());
-    const response=await fetch(url,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
+    let response=await fetch(url,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
+    if(response.status===404){const stable=new URL(url);stable.pathname=stable.pathname.replace('/v1/','/2025-03/');response=await fetch(stable,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});}
     if(!response.ok)throw new Error('Tiendanube HTTP '+response.status+' al consultar pedidos (página '+page+'). Revisar tienda, versión de API y autorización.');
     const batch=await response.json();
     if(!Array.isArray(batch))throw new Error('Respuesta de pedidos inválida');
