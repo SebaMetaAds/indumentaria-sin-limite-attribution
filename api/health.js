@@ -17,26 +17,34 @@ function config(){
   return stores.filter(x=>x&&/^[a-z0-9-]{3,80}$/i.test(String(x.client_id||''))&&/^\d+$/.test(String(x.store_id||''))&&typeof x.access_token==='string'&&x.access_token.length>8);
 }
 async function requestOrders(store,days,offsetDays=0){
-  const now=new Date(Date.now()-offsetDays*86400000);
-  const start=new Date(now.getTime()-(days-1)*86400000);
-  const orders=[];
-  const maxPages=20,perPage=200;
-  for(let page=1;page<=maxPages;page++){
-    const url=new URL('https://api.tiendanube.com/v1/'+store.store_id+'/orders');
-    url.searchParams.set('per_page',String(perPage));
-    url.searchParams.set('page',String(page));
-    url.searchParams.set('created_at_min',start.toISOString());
-    url.searchParams.set('created_at_max',now.toISOString());
-    let response=await fetch(url,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});
-    if(response.status===404){const stable=new URL(url);stable.pathname=stable.pathname.replace('/v1/','/2025-03/');response=await fetch(stable,{headers:{Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'},signal:AbortSignal.timeout(12000)});}
-    if(!response.ok)throw new Error('Tiendanube HTTP '+response.status+' al consultar pedidos (página '+page+'). Revisar tienda, versión de API y autorización.');
-    const batch=await response.json();
-    if(!Array.isArray(batch))throw new Error('Respuesta de pedidos inválida');
-    orders.push(...batch);
-    if(batch.length<perPage)break;
-    if(page===maxPages)throw new Error('Demasiados pedidos para este período; seleccioná menos días');
+  const end=new Date(Date.now()-offsetDays*86400000);
+  const start=new Date(end.getTime()-(days-1)*86400000);
+  const headers={Authorization:'Bearer '+store.access_token,'User-Agent':'Agencia Analytics ('+(process.env.TIENDANUBE_APP_ID||'48985')+')','Accept':'application/json'};
+  async function slice(from,to,depth=0){
+    const orders=[];
+    for(let page=1;page<=20;page++){
+      const url=new URL('https://api.tiendanube.com/v1/'+store.store_id+'/orders');
+      url.searchParams.set('per_page','200');
+      url.searchParams.set('page',String(page));
+      url.searchParams.set('created_at_min',from.toISOString());
+      url.searchParams.set('created_at_max',to.toISOString());
+      const response=await fetch(url,{headers,signal:AbortSignal.timeout(15000)});
+      if(response.status===404&&depth<6&&to-from>2*86400000){
+        const midpoint=new Date((from.getTime()+to.getTime())/2);
+        const a=await slice(from,midpoint,depth+1);
+        const b=await slice(new Date(midpoint.getTime()+1),to,depth+1);
+        return [...a,...b];
+      }
+      if(!response.ok)throw new Error('Tiendanube HTTP '+response.status+' al consultar '+from.toISOString().slice(0,10)+' a '+to.toISOString().slice(0,10)+' (página '+page+').');
+      const batch=await response.json();
+      if(!Array.isArray(batch))throw new Error('Respuesta de pedidos inválida');
+      orders.push(...batch);
+      if(batch.length<200)return orders;
+    }
+    throw new Error('Demasiados pedidos; reducí el período');
   }
-  return orders;
+  const results=await slice(start,end);
+  return [...new Map(results.map(o=>[String(o.id),o])).values()];
 }
 function dailyPaid(orders){
  const map=new Map();
