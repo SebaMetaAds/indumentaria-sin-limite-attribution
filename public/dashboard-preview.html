@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vista previa · Agencia</title><link rel="stylesheet" href="/dashboard-preview.css"></head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="logo">A</div><div><strong>AGENCIA</strong><small>Panel de gestión</small></div><button class="close" id="closeMenu" aria-label="Cerrar menú">×</button></div>
+  <div class="nav-label">PRINCIPAL</div>
+  <nav aria-label="Navegación principal">
+    <button class="nav-item active" data-section="dashboard"><span>◫</span> Resumen</button>
+    <button class="nav-item" data-section="clients"><span>◉</span> Clientes</button>
+    <button class="nav-item" data-section="ads"><span>▥</span> Meta Ads</button>
+    <button class="nav-item" data-section="crm"><span>▣</span> WhatsApp CRM</button>
+    <button class="nav-item" data-section="sales"><span>▤</span> Ventas</button>
+    <button class="nav-item" data-section="finance"><span>◇</span> Finanzas</button>
+    <button class="nav-item" data-section="tasks"><span>☑</span> Tareas</button>
+  </nav>
+  <div class="sidebar-bottom"><span class="status-dot"></span> Prototipo visual <small>No conectado a datos reales</small></div>
+</aside>
+<div class="overlay" id="overlay"></div>
+<div class="main">
+<header class="topbar"><button id="openMenu" class="menu-toggle" aria-label="Abrir menú">☰</button><div class="crumb">Espacio de trabajo <span>/</span> <strong id="crumb">Resumen</strong></div><div class="top-actions"><span class="demo-pill">VISTA PREVIA</span><button class="icon-button" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">☾</button><div class="avatar">AG</div></div></header>
+<main class="content">
+<div class="page-heading"><div><div class="eyebrow">GESTIÓN DE AGENCIA</div><h1 id="pageTitle">Resumen general</h1><p id="pageDescription">Un espacio más claro para tomar decisiones.</p></div><div class="actions"><label class="date-picker">Período <select id="period"><option value="7">Últimos 7 días</option><option selected value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option></select></label><button class="primary-button" id="demoButton">↗ Ver funcionalidad</button></div></div>
+<div class="visual-toolbar"><span class="live-pulse"></span><strong>Experiencia interactiva</strong><span>Explorá tarjetas, filtros y gráficos · valores de demostración</span><button id="effectsToggle" aria-pressed="true">✦ Efectos activos</button></div><div class="notice"><strong>Propuesta de diseño.</strong> Los valores de esta pantalla son ejemplos ficticios. El panel original y sus integraciones permanecen sin cambios.</div>
+<section id="dashboard" class="view active" aria-label="Resumen">
+<div class="metrics" id="metricGrid">
+<article class="metric"><div class="metric-label">Facturación atribuida <span>↗</span></div><div class="metric-value">$28,5 M</div><div class="metric-foot"><b>+18,4%</b> vs. período anterior</div></article>
+<article class="metric"><div class="metric-label">Inversión publicitaria <span>◎</span></div><div class="metric-value">$7,2 M</div><div class="metric-foot"><b>+8,2%</b> vs. período anterior</div></article>
+<article class="metric"><div class="metric-label">ROAS promedio <span>◷</span></div><div class="metric-value">3,96×</div><div class="metric-foot"><b>+0,42×</b> vs. período anterior</div></article>
+<article class="metric"><div class="metric-label">Clientes activos <span>◉</span></div><div class="metric-value">18</div><div class="metric-foot"><b>+3</b> este mes</div></article>
+</div>
+<div class="panel-grid">
+<section class="panel"><div class="panel-header"><div><h2>Rendimiento de la agencia</h2><p>Facturación atribuida · datos de ejemplo</p></div><span class="subtle-label">ARS</span></div><div class="chart-area" id="chartArea"><div class="chart-tip" id="chartTip" hidden></div><div class="y-labels"><span>5 M</span><span>4 M</span><span>3 M</span><span>2 M</span><span>1 M</span></div><svg viewBox="0 0 700 245" preserveAspectRatio="none" role="img" aria-label="Ejemplo ilustrativo de evolución de facturación"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#7065e8" stop-opacity=".25"/><stop offset="1" stop-color="#7065e8" stop-opacity="0"/></linearGradient></defs><path d="M0 197 L115 163 L230 174 L345 113 L460 97 L575 62 L700 29 L700 245 L0 245Z" fill="url(#area)"/><g stroke="currentColor" opacity=".08"><path d="M0 40H700M0 91H700M0 142H700M0 193H700M0 244H700"/></g><path d="M0 197 L115 163 L230 174 L345 113 L460 97 L575 62 L700 29" fill="none" stroke="#7468f5" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg></div><div class="x-labels"><span>1 oct</span><span>5 oct</span><span>10 oct</span><span>15 oct</span><span>20 oct</span><span>25 oct</span></div></section>
+<section class="panel alerts"><div class="panel-header"><div><h2>Centro de atención</h2><p>Qué revisar primero</p></div><span class="count">3</span></div><div class="alert-row"><div class="alert-icon red">!</div><div><strong>Campañas por optimizar</strong><p>2 campañas superan su CPA objetivo</p></div><span>Hoy</span></div><div class="alert-row"><div class="alert-icon amber">◷</div><div><strong>Renovaciones próximas</strong><p>3 servicios vencen esta semana</p></div><span>7 días</span></div><div class="alert-row"><div class="alert-icon violet">↗</div><div><strong>Oportunidad de mejora</strong><p>Un cliente creció 18% en ROAS</p></div><span>Nuevo</span></div></section>
+</div>
+<section class="panel table-panel"><div class="panel-header"><div><h2>Clientes destacados</h2><p>Seguimiento rápido de rendimiento</p></div><button class="text-button" data-go="clients">Ver clientes →</button></div><div class="table-tools"><label for="customerSearch">Buscar cliente</label><input id="customerSearch" type="search" placeholder="Buscar por nombre o rubro..." autocomplete="off"><span id="resultCount">3 resultados</span></div><div class="table-scroll"><table id="customerTable"><thead><tr><th>Cliente</th><th>Inversión</th><th>Ventas</th><th>ROAS</th><th>Estado</th></tr></thead><tbody><tr><td><strong>FG Mayorista</strong><small>Indumentaria</small></td><td>$1.200.000</td><td>124</td><td><strong>4,2×</strong></td><td><span class="tag green">Estable</span></td></tr><tr><td><strong>Drop Street</strong><small>Calzado</small></td><td>$890.000</td><td>72</td><td><strong>3,6×</strong></td><td><span class="tag green">Estable</span></td></tr><tr><td><strong>Klout Shoes</strong><small>Calzado</small></td><td>$640.000</td><td>36</td><td><strong>2,3×</strong></td><td><span class="tag amber">Revisar</span></td></tr></tbody></table></div></section>
+</section>
+<section id="otherView" class="view"><div class="empty-panel"><div class="empty-icon">◇</div><h2 id="otherTitle"></h2><p>En la siguiente etapa conectaremos esta sección con las funciones existentes. Esta vista solo demuestra la navegación, sin ejecutar cambios en el sistema real.</p><button class="primary-button" data-go="dashboard">Volver al resumen</button></div></section>
+</main><footer>Diseño de prueba · HTML + CSS + JavaScript · Sin acceso a producción</footer>
+</div></div><div class="toast" role="status" aria-live="polite" id="toast"></div>
+<script src="/dashboard-preview.js" defer></script></body></html>
